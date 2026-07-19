@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nitro Racer | Simulator</title>
+    <meta name="description" content="High-performance browser racing simulator.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600;700&family=Inter:wght@300;400;600;800&family=JetBrains+Mono:ital,wght@1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Specific Landing Page Styles */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #050507;
+            font-family: var(--font-body);
+            color: var(--text-main);
+        }
+
+        /* Animated Grid Background */
+        .animated-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            perspective: 1000px;
+            overflow: hidden;
+        }
+
+        .bg-grid {
+            position: absolute;
+            width: 200vw;
+            height: 200vh;
+            bottom: -50vh;
+            left: -50vw;
+            background-image: 
+                linear-gradient(rgba(255, 30, 30, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 30, 30, 0.15) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: rotateX(75deg);
+            animation: gridMove 5s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: rotateX(75deg) translateY(0); }
+            100% { transform: rotateX(75deg) translateY(50px); }
+        }
+
+        .bg-glow {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center 80%, rgba(255, 30, 30, 0.2) 0%, transparent 60%);
+        }
+
+        .bg-vignette {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, transparent 30%, #050507 100%);
+        }
+
+        /* Split Screen Hero Layout */
+        .hero-split {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            padding: 5vh 5vw;
+        }
+
+        .hero-left, .hero-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .hero-left {
+            padding-right: 5vw;
+            animation: slideInLeft 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+
+        @keyframes slideInLeft {
+            0% { transform: translateX(-50px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Branding */
+        .hero-title {
+            font-family: var(--font-heading);
+            font-size: 7rem;
+            line-height: 0.85;
+            font-weight: 700;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .glitch-layer {
+            color: var(--accent);
+            text-shadow: 0 0 20px rgba(255, 30, 30, 0.8);
+            display: block;
+        }
+
+        .hero-line {
+            width: 60px;
+            height: 4px;
+            background: var(--accent);
+            margin-bottom: 25px;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .hero-desc {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            max-width: 450px;
+            margin-bottom: 50px;
+            line-height: 1.5;
+        }
+
+        /* Actions */
+        .hero-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 400px;
+        }
+
+        .btn-primary {
+            position: relative;
+            background: var(--accent);
+            color: #fff;
+            padding: 20px 40px;
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            text-decoration: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transform: skewX(-10deg);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(255, 30, 30, 0.4);
+        }
+
+        .btn-primary .btn-text, .btn-primary .btn-arrow {
+            transform: skewX(10deg);
+            position: relative;
+            z-index: 2;
+        }
+
+        .btn-primary .btn-arrow {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            transition: transform 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 40px rgba(255, 30, 30, 0.8);
+            background: #fff;
+            color: var(--accent);
+            transform: skewX(-10deg) scale(1.05);
+        }
+
+        .btn-primary:hover .btn-arrow {
+            transform: skewX(10deg) translateX(10px);
+        }
+
+        .btn-scanline {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.2) 2px,
+                rgba(0,0,0,0.2) 4px
+            );
+            z-index: 1;
+        }
+
+        .btn-secondary-outline {
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-main);
+            padding: 15px 30px;
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            cursor: pointer;
+            transform: skewX(-10deg);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-secondary-outline .btn-text {
+            transform: skewX(10deg);
+            display: block;
+        }
+
+        .btn-secondary-outline:hover {
+            border-color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+            transform: skewX(-10deg) scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Right Side: Telemetry Dashboard */
+        .hero-right {
+            align-items: flex-end;
+            animation: slideInRight 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            animation-delay: 0.2s;
+        }
+
+        @keyframes slideInRight {
+            0% { transform: translateX(50px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        .telemetry-dashboard {
+            background: var(--panel-bg);
+            border: 1px solid rgba(255, 30, 30, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            width: 450px;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(255, 30, 30, 0.05);
+        }
+
+        .telemetry-dashboard::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 20px; height: 20px;
+            border-top: 2px solid var(--accent);
+            border-left: 2px solid var(--accent);
+        }
+        
+        .telemetry-dashboard::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; right: -1px;
+            width: 20px; height: 20px;
+            border-bottom: 2px solid var(--accent);
+            border-right: 2px solid var(--accent);
+        }
+
+        .dash-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--accent);
+            margin-bottom: 30px;
+            letter-spacing: 0.1em;
+        }
+
+        .dash-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .dash-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .dash-card {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dash-label {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-bottom: 5px;
+            letter-spacing: 0.1em;
+        }
+
+        .dash-value-wrap {
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+            margin-bottom: 8px;
+        }
+
+        .dash-value {
+            font-family: var(--font-heading);
+            font-size: 3.5rem;
+            line-height: 1;
+            color: var(--text-main);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .dash-unit {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            color: var(--accent);
+        }
+
+        .dash-bar {
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            width: 100%;
+            position: relative;
+        }
+
+        .dash-fill {
+            position: absolute;
+            top: 0; left: 0; bottom: 0;
+            background: var(--accent);
+            width: 0%;
+            transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        /* Info Modal */
+        #infoModal {
+            position: fixed;
+            inset: 0;
+            background: rgba(5,5,7,0.9);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        #infoModal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            background: var(--bg-base);
+            border: 1px solid var(--border);
+            padding: 50px;
+            max-width: 800px;
+            width: 90%;
+            position: relative;
+            border-top: 3px solid var(--accent);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .close-btn {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: none; border: none;
+            color: var(--text-main);
+            font-size: 1.5rem;
+            cursor: pointer;
+            font-family: var(--font-body);
+        }
+        .close-btn:hover { color: var(--accent); }
+        .modal-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+        .modal-col h3 {
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            color: var(--accent);
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            text-transform: uppercase;
+        }
+        .modal-list { list-style: none; padding: 0; margin: 0; }
+        .modal-list li {
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .modal-list kbd {
+            background: rgba(255,30,30,0.1);
+            padding: 4px 10px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-main);
+            border: 1px solid rgba(255,30,30,0.3);
+            border-radius: 2px;
+            min-width: 45px;
+            text-align: center;
+        }
+
+        /* Loading Screen */
+        #loadingScreen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-base);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease;
+        }
+        #loadingScreen.fade-out { opacity: 0; pointer-events: none; }
+        .loading-title {
+            font-family: var(--font-heading);
+            font-size: 4rem;
+            color: var(--accent);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            text-shadow: 0 0 20px rgba(255, 30, 30, 0.5);
+        }
+        .loading-bar {
+            width: 300px;
+            height: 2px;
+            background: rgba(255,255,255,0.1);
+            position: relative;
+        }
+        .loading-fill {
+            position: absolute;
+            top: 0; left: 0; bottom: 0;
+            width: 0%;
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+            transition: width 0.1s linear;
+        }
+        .loading-text {
+            margin-top: 15px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            letter-spacing: 0.1em;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Screen -->
+    <div id="loadingScreen">
+        <div class="loading-title">NITRO RACER</div>
+        <div class="loading-bar">
+            <div class="loading-fill" id="loadingFill"></div>
+        </div>
+        <div class="loading-text" id="loadingText">INITIALIZING TELEMETRY...</div>
+    </div>
+
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="bg-grid"></div>
+        <div class="bg-glow"></div>
+        <div class="bg-vignette"></div>
+    </div>
+
+    <!-- Split Screen Layout -->
+    <div class="hero-split">
+        <!-- Left: Branding & CTA -->
+        <div class="hero-left">
+            <div class="hero-branding">
+                <h1 class="hero-title">
+                    <span class="glitch-layer">NITRO RACER</span>
+                    <br>SIMULATOR
+                </h1>
+                <div class="hero-line"></div>
+                <p class="hero-desc">Experience sim-grade physics and high-octane drift mechanics in your browser. Master the track.</p>
+            </div>
+            
+            <div class="hero-actions">
+                <a href="#" onclick="transitionToGame(event)" class="btn-primary">
+                    <div class="btn-scanline"></div>
+                    <span class="btn-text">DRIVE NOW</span>
+                    <span class="btn-arrow">&gt;&gt;</span>
+                </a>
+                <button class="btn-secondary-outline" onclick="document.getElementById('infoModal').classList.add('active')">
+                    <span class="btn-text">CONTROLS & INFO</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Right: Telemetry Dashboard -->
+        <div class="hero-right">
+            <div class="telemetry-dashboard">
+                <div class="dash-header">
+                    <div class="dash-dot"></div>
+                    <span>LIVE TELEMETRY</span>
+                </div>
+                
+                <div class="dash-grid">
+                    <div class="dash-card">
+                        <span class="dash-label">POWER</span>
+                        <div class="dash-value-wrap">
+                            <span class="dash-value dash-counter" data-target="840" data-decimals="0">0</span>
+                            <span class="dash-unit">BHP</span>
+                        </div>
+                        <div class="dash-bar"><div class="dash-fill" data-width="85%"></div></div>
+                    </div>
+                    
+                    <div class="dash-card">
+                        <span class="dash-label">0-100 KM/H</span>
+                        <div class="dash-value-wrap">
+                            <span class="dash-value dash-counter" data-target="2.8" data-decimals="1">0.0</span>
+                            <span class="dash-unit">SEC</span>
+                        </div>
+                        <div class="dash-bar"><div class="dash-fill" data-width="95%"></div></div>
+                    </div>
+                    
+                    <div class="dash-card">
+                        <span class="dash-label">TOP SPEED</span>
+                        <div class="dash-value-wrap">
+                            <span class="dash-value dash-counter" data-target="340" data-decimals="0">0</span>
+                            <span class="dash-unit">KM/H</span>
+                        </div>
+                        <div class="dash-bar"><div class="dash-fill" data-width="78%"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Modal -->
+    <div id="infoModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="document.getElementById('infoModal').classList.remove('active')">&times;</button>
+            <div class="modal-grid">
+                <div class="modal-col">
+                    <h3>Controls</h3>
+                    <ul class="modal-list">
+                        <li><kbd>W / &uarr;</kbd> <span>Throttle</span></li>
+                        <li><kbd>S / &darr;</kbd> <span>Brake</span></li>
+                        <li><kbd>A / D</kbd> <span>Steering Input</span></li>
+                        <li><kbd>Space</kbd> <span>Handbrake (Drift)</span></li>
+                        <li><kbd>Shift</kbd> <span>Nitro Injection</span></li>
+                        <li><kbd>C</kbd> <span>Camera View</span></li>
+                    </ul>
+                </div>
+                <div class="modal-col">
+                    <h3>Features</h3>
+                    <ul class="modal-list">
+                        <li><kbd>AI</kbd> <span>3 Dynamic AI Rivals with distinct styles.</span></li>
+                        <li><kbd>DRFT</kbd> <span>Drift to build up nitro pressure.</span></li>
+                        <li><kbd>WTHR</kbd> <span>Rain mode toggles grip simulation.</span></li>
+                        <li><kbd>VFX</kbd> <span>ACES Filmic Tone Mapping & Bloom.</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Techy Loading Screen
+        const texts = [
+            "INITIALIZING TELEMETRY...",
+            "LOADING TRACK DATA...",
+            "CALIBRATING SUSPENSION...",
+            "WARMING UP TIRES...",
+            "SYSTEM READY."
+        ];
+        
+        let progress = 0;
+        let textIdx = 0;
+        const bar = document.getElementById('loadingFill');
+        const txt = document.getElementById('loadingText');
+        const screen = document.getElementById('loadingScreen');
+
+        function loadLoop() {
+            progress += Math.random() * 15 + 5;
+            if (progress > 100) progress = 100;
+            
+            bar.style.width = progress + '%';
+            
+            let targetIdx = Math.floor((progress / 100) * (texts.length - 1));
+            if (targetIdx !== textIdx) {
+                textIdx = targetIdx;
+                txt.textContent = texts[textIdx];
+            }
+
+            if (progress < 100) {
+                setTimeout(loadLoop, Math.random() * 150 + 50);
+            } else {
+                txt.textContent = texts[texts.length - 1];
+                setTimeout(() => {
+                    screen.classList.add('fade-out');
+                    setTimeout(() => {
+                        screen.remove();
+                        initDashboard();
+                    }, 800);
+                }, 500);
+            }
+        }
+
+        window.onload = () => {
+            setTimeout(loadLoop, 300);
+        };
+
+        // Number animation for Dashboard
+        function initDashboard() {
+            // Animate progress bars
+            document.querySelectorAll('.dash-fill').forEach(fill => {
+                fill.style.width = fill.getAttribute('data-width');
+            });
+
+            // Animate counters
+            document.querySelectorAll('.dash-counter').forEach(counter => {
+                const target = parseFloat(counter.getAttribute('data-target'));
+                const decimals = parseInt(counter.getAttribute('data-decimals'));
+                const duration = 1500; // ms
+                const start = performance.now();
+
+                function updateCounter(currentTime) {
+                    const elapsed = currentTime - start;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    // easeOutQuart
+                    const ease = 1 - Math.pow(1 - progress, 4);
+                    
+                    const current = (target * ease).toFixed(decimals);
+                    counter.textContent = current;
+
+                    if (progress < 1) {
+                        requestAnimationFrame(updateCounter);
+                    }
+                }
+                requestAnimationFrame(updateCounter);
+            });
+        }
+
+        function transitionToGame(e) {
+            e.preventDefault();
+            const overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.inset = '0';
+            overlay.style.backgroundColor = 'var(--accent)';
+            overlay.style.clipPath = 'polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)';
+            overlay.style.transition = 'clip-path 0.5s cubic-bezier(0.86, 0, 0.07, 1)';
+            overlay.style.zIndex = '9999';
+            
+            const text = document.createElement('div');
+            text.textContent = 'INITIALIZING SYSTEM...';
+            text.style.position = 'absolute';
+            text.style.top = '50%'; text.style.left = '50%';
+            text.style.transform = 'translate(-50%, -50%)';
+            text.style.fontFamily = 'var(--font-heading)';
+            text.style.fontSize = '4rem';
+            text.style.color = '#fff';
+            overlay.appendChild(text);
+
+            document.body.appendChild(overlay);
+            
+            overlay.offsetHeight; // trigger reflow
+            overlay.style.clipPath = 'polygon(0 0, 100% 0, 100% 100%, 0% 100%)';
+            
+            setTimeout(() => {
+                window.location.href = 'game.html';
+            }, 600);
+        }
+
+        // Play BGM on first interaction
+        let bgmPlayed = false;
+        const playBgm = () => {
+            if (!bgmPlayed) {
+                const bgm = document.getElementById('bgm');
+                if (bgm) {
+                    bgm.volume = 0.3;
+                    const playPromise = bgm.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(_ => {
+                            bgmPlayed = true;
+                        }).catch(e => {
+                            // Autoplay was prevented. Wait for next interaction.
+                        });
+                    }
+                }
+            }
+        };
+        ['click', 'pointerdown', 'touchstart', 'keydown', 'mousemove'].forEach(evt => {
+            document.addEventListener(evt, playBgm);
+        });
+    </script>
+    <audio id="bgm" src="assets/audio/lose_my_mind.webm" loop autoplay></audio>
+</body>
+</html>
