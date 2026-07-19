@@ -1590,6 +1590,33 @@ class Car {
             let steerMult = this.strategy === 'technical' ? 3.0 : (this.strategy === 'aggro' ? 2.0 : 2.5);
             steer = Math.max(-1, Math.min(1, (diff * steerMult) + avoidSteer));
             accel = 1;
+
+            // Rubber-banding: tough competition but player should win
+            const player = allCars.find(c => c.isPlayer);
+            if (player) {
+                let myProg = this.lap * 1000 + this.cpIndex;
+                let pProg = player.lap * 1000 + player.cpIndex;
+                let progDiff = myProg - pProg;
+
+                if (progDiff > 0) {
+                    // AI is ahead
+                    if (this.lap >= 3) {
+                        accel = 0.85; // Final lap, let player catch up and win
+                        this.maxSpeed = Math.min(this.maxSpeed, 19.5);
+                    } else {
+                        accel = 0.95; // Keep it close
+                        this.maxSpeed = Math.min(this.maxSpeed, 20.2);
+                    }
+                } else if (progDiff < -5) {
+                    // AI is far behind, speed them up!
+                    accel = 1.15;
+                    this.maxSpeed = Math.max(this.maxSpeed, 21.5);
+                } else if (progDiff < 0) {
+                    // Slightly behind
+                    accel = 1.05;
+                }
+            }
+
             let brakeThreshold = this.strategy === 'speedster' ? 1.2 : (this.strategy === 'technical' ? 0.7 : 0.9);
             if (Math.abs(diff) > brakeThreshold) accel = 0.4;
         }
