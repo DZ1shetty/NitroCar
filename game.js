@@ -431,11 +431,11 @@ function initAudio() {
         };
 
         // Load placeholders - drop real MP3s/WAVs into the assets/audio folder!
-        loadSound('bgm', 'assets/audio/bgm.wav', true, 0.4);
-        loadSound('engine', 'assets/audio/engine.wav', true, 0.8);
-        loadSound('screech', 'assets/audio/screech.wav', false, 0.6);
-        loadSound('nitro', 'assets/audio/nitro.wav', false, 1.0);
-        loadSound('crash', 'assets/audio/crash.wav', false, 1.0);
+        loadSound('bgm', 'assets/audio/bgm.wav', true, 0.1);
+        loadSound('engine', 'assets/audio/engine.wav', true, 0.2);
+        loadSound('screech', 'assets/audio/screech.wav', false, 0.25);
+        loadSound('nitro', 'assets/audio/nitro.wav', false, 0.4);
+        loadSound('crash', 'assets/audio/crash.wav', false, 0.4);
         
     } catch(e) {
         console.error("Audio system init failed", e);

@@ -675,6 +675,10 @@
                 const bgm = document.getElementById('bgm');
                 if (bgm) {
                     bgm.volume = 0.3;
+                    const savedTime = sessionStorage.getItem('bgmTime');
+                    if (savedTime) {
+                        bgm.currentTime = parseFloat(savedTime);
+                    }
                     const playPromise = bgm.play();
                     if (playPromise !== undefined) {
                         playPromise.then(_ => {
@@ -686,6 +690,13 @@
                 }
             }
         };
+
+        window.addEventListener('beforeunload', () => {
+            const bgm = document.getElementById('bgm');
+            if (bgm) {
+                sessionStorage.setItem('bgmTime', bgm.currentTime);
+            }
+        });
         ['click', 'pointerdown', 'touchstart', 'keydown', 'mousemove'].forEach(evt => {
             document.addEventListener(evt, playBgm);
         });
