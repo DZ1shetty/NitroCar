@@ -1748,121 +1748,161 @@
             <div class="hero-line"></div>
           </div>
 
-          <div
-            class="menu-settings"
-            style="
-              display: flex;
-              flex-direction: column;
-              gap: 15px;
-              margin-bottom: 30px;
-              max-width: 400px;
-            "
-          >
-            <div class="setting-group">
-              <label class="dash-label">VEHICLE CLASS</label>
-              <select
-                id="carClassSelect"
-                onchange="selectCarClass(this.value)"
-                class="custom-select"
+          <div class="garage-hub-container">
+            <div class="garage-tab-nav">
+              <button
+                id="tabBtnShowroom"
+                class="garage-tab-btn active"
+                onclick="switchGarageTab('showroom')"
               >
-                <option value="hypercar">🏎️ APEX HORIZON (HYPERCAR)</option>
-                <option value="jdm_drift">⚡ KAZE GT (JDM DRIFT)</option>
-                <option value="muscle">🚀 V8 SUPERCHARGER (MUSCLE)</option>
-                <option value="offroad">🏜️ DUNE BUSTER (RALLY BUGGY)</option>
-              </select>
-            </div>
-            <div class="setting-group">
-              <label class="dash-label">TRACK LAYOUT</label>
-              <select
-                id="trackSelect"
-                onchange="selectTrackLayout(this.value)"
-                class="custom-select"
+                🏎️ GARAGE & TUNING
+              </button>
+              <button
+                id="tabBtnTracks"
+                class="garage-tab-btn"
+                onclick="switchGarageTab('tracks')"
               >
-                <option value="grand_prix">🏁 GRAND PRIX SERPENT</option>
-                <option value="canyon_run">⛰️ CANYON SWITCHBACKS</option>
-                <option value="tokyo_drift">🏙️ TOKYO EXPRESSWAY RING</option>
-              </select>
+                🗺️ TRACKS & ENVIRONMENT
+              </button>
             </div>
-            <div class="setting-group">
-              <label class="dash-label">CAR COLOR</label>
-              <input
-                type="color"
-                id="carColor"
-                value="#ff1e1e"
-                class="color-picker-input"
-                onchange="updatePlayerColor(this.value)"
-              />
+
+            <!-- TAB 1: VEHICLE GARAGE & TUNING -->
+            <div id="tab-showroom" class="garage-tab-content active">
+              <div class="setting-group">
+                <label class="dash-label">VEHICLE CLASS</label>
+                <select
+                  id="carClassSelect"
+                  onchange="selectCarClass(this.value)"
+                  class="custom-select"
+                >
+                  <option value="hypercar">🏎️ APEX HORIZON (HYPERCAR)</option>
+                  <option value="jdm_drift">⚡ KAZE GT (JDM DRIFT)</option>
+                  <option value="muscle">🚀 V8 SUPERCHARGER (MUSCLE)</option>
+                  <option value="offroad">🏜️ DUNE BUSTER (RALLY BUGGY)</option>
+                </select>
+              </div>
+
+              <!-- Vehicle Stat Comparison Bars -->
+              <div class="car-stats-container">
+                <div class="stat-row">
+                  <span>TOP SPEED</span>
+                  <div class="stat-bar-track">
+                    <div id="statSpeed" class="stat-bar-fill" style="width: 85%"></div>
+                  </div>
+                </div>
+                <div class="stat-row">
+                  <span>ACCELERATION</span>
+                  <div class="stat-bar-track">
+                    <div id="statAccel" class="stat-bar-fill" style="width: 78%"></div>
+                  </div>
+                </div>
+                <div class="stat-row">
+                  <span>HANDLING</span>
+                  <div class="stat-bar-track">
+                    <div id="statHandling" class="stat-bar-fill" style="width: 82%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-group" style="margin-top: 8px">
+                <label class="dash-label">BODY PAINT</label>
+                <input
+                  type="color"
+                  id="carColor"
+                  value="#ff1e1e"
+                  class="color-picker-input"
+                  onchange="updatePlayerColor(this.value)"
+                />
+              </div>
+
+              <div class="setting-group">
+                <label class="dash-label">NEON UNDERGLOW</label>
+                <select
+                  id="underglowSelect"
+                  onchange="selectUnderglow(this.value)"
+                  class="custom-select"
+                >
+                  <option value="#00f3ff">⚡ CYAN NEON</option>
+                  <option value="#ff0055">🔥 MAGENTA NEON</option>
+                  <option value="#ffe600">🌟 GOLDEN GLOW</option>
+                  <option value="#00ff66">🧪 LIME NEON</option>
+                  <option value="none">OFF</option>
+                </select>
+              </div>
             </div>
-            <div class="setting-group">
-              <label class="dash-label">NEON UNDERGLOW</label>
-              <select
-                id="underglowSelect"
-                onchange="selectUnderglow(this.value)"
-                class="custom-select"
-              >
-                <option value="#00f3ff">⚡ CYAN NEON</option>
-                <option value="#ff0055">🔥 MAGENTA NEON</option>
-                <option value="#ffe600">🌟 GOLDEN GLOW</option>
-                <option value="#00ff66">🧪 LIME NEON</option>
-                <option value="none">OFF</option>
-              </select>
+
+            <!-- TAB 2: TRACK & ENVIRONMENT SELECTION -->
+            <div id="tab-tracks" class="garage-tab-content">
+              <div class="setting-group">
+                <label class="dash-label">CIRCUIT SELECTION</label>
+                <div class="track-cards-grid">
+                  <div
+                    class="track-card active"
+                    onclick="selectTrackCard('grand_prix')"
+                  >
+                    <span class="track-card-title">🏁 GP SERPENT</span>
+                    <span class="track-card-desc">S-Curves & Hairpins</span>
+                  </div>
+                  <div
+                    class="track-card"
+                    onclick="selectTrackCard('canyon_run')"
+                  >
+                    <span class="track-card-title">⛰️ CANYON PASS</span>
+                    <span class="track-card-desc">Mountain Switchbacks</span>
+                  </div>
+                  <div
+                    class="track-card"
+                    onclick="selectTrackCard('tokyo_drift')"
+                  >
+                    <span class="track-card-title">🏙️ TOKYO RING</span>
+                    <span class="track-card-desc">Urban Street Drift</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-group">
+                <label class="dash-label">WEATHER</label>
+                <select
+                  id="weatherSelect"
+                  onchange="toggleWeather(this.value)"
+                  class="custom-select"
+                >
+                  <option value="summer">☀️ SUMMER</option>
+                  <option value="rain">🌧️ RAIN STORM</option>
+                  <option value="snow">❄️ SNOW</option>
+                  <option value="night">🌙 NIGHT</option>
+                </select>
+              </div>
+
+              <div class="setting-group">
+                <label class="dash-label">DIFFICULTY</label>
+                <select
+                  id="difficultySelect"
+                  onchange="setDifficulty(this.value)"
+                  class="custom-select"
+                >
+                  <option value="easy">ROOKIE</option>
+                  <option value="medium" selected>PRO</option>
+                  <option value="hard">VETERAN</option>
+                </select>
+              </div>
             </div>
-            <div class="setting-group">
-              <label class="dash-label">WEATHER</label>
-              <select
-                id="weatherSelect"
-                onchange="toggleWeather(this.value)"
-                class="custom-select"
-              >
-                <option value="summer">☀️ SUMMER</option>
-                <option value="rain">🌧️ RAIN STORM</option>
-                <option value="snow">❄️ SNOW</option>
-                <option value="night">🌙 NIGHT</option>
-              </select>
-            </div>
-            <div class="setting-group">
-              <label class="dash-label">DIFFICULTY</label>
-              <select
-                id="difficultySelect"
-                onchange="setDifficulty(this.value)"
-                class="custom-select"
-              >
-                <option value="easy">ROOKIE</option>
-                <option value="medium" selected>PRO</option>
-                <option value="hard">VETERAN</option>
-              </select>
-            </div>
-            <div
-              class="setting-group"
-              id="bestTimesRow"
-              style="display: flex; gap: 10px"
+          </div>
+
+          <div class="hero-actions" style="margin-top: 20px">
+            <button id="startBtn" class="btn-primary" onclick="startGame()">
+              <div class="btn-scanline"></div>
+              <span class="btn-text">START ENGINE</span>
+              <span class="btn-arrow">&gt;&gt;</span>
+            </button>
+            <button
+              class="btn-secondary-outline"
+              onclick="window.returnToLandingPreview && window.returnToLandingPreview()"
             >
-              <span
-                class="best-time-chip"
-                id="best_summer"
-                style="
-                  display: none;
-                  font-family: var(--font-mono);
-                  font-size: 0.8rem;
-                  background: var(--accent);
-                  padding: 2px 8px;
-                  border-radius: 2px;
-                "
-              ></span>
-              <span
-                class="best-time-chip"
-                id="best_rain"
-                style="
-                  display: none;
-                  font-family: var(--font-mono);
-                  font-size: 0.8rem;
-                  background: var(--accent);
-                  padding: 2px 8px;
-                  border-radius: 2px;
-                "
-              ></span>
-              <span
-                class="best-time-chip"
+              <span class="btn-text">BACK TO MENU</span>
+            </button>
+          </div>
+        </div>
                 id="best_snow"
                 style="
                   display: none;

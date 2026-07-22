@@ -2991,7 +2991,33 @@ function selectCarClass(val) {
         player.accel = stats.accel;
         player.turnSpeed = stats.handling;
     }
+    // Update UI Stat Bars
+    if (stats) {
+        const speedBar = document.getElementById('statSpeed');
+        const accelBar = document.getElementById('statAccel');
+        const handlingBar = document.getElementById('statHandling');
+        if (speedBar) speedBar.style.width = Math.min(100, (stats.maxSpeed / 20) * 100) + '%';
+        if (accelBar) accelBar.style.width = Math.min(100, (stats.accel / 0.5) * 100) + '%';
+        if (handlingBar) handlingBar.style.width = Math.min(100, (stats.handling / 0.1) * 100) + '%';
+    }
     updatePlayerColor(customColor);
+}
+
+function switchGarageTab(tabId) {
+    document.querySelectorAll('.garage-tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.garage-tab-btn').forEach(el => el.classList.remove('active'));
+    
+    const targetContent = document.getElementById('tab-' + tabId);
+    if (targetContent) targetContent.classList.add('active');
+    
+    const targetBtn = document.getElementById(tabId === 'showroom' ? 'tabBtnShowroom' : 'tabBtnTracks');
+    if (targetBtn) targetBtn.classList.add('active');
+}
+
+function selectTrackCard(layoutKey) {
+    document.querySelectorAll('.track-card').forEach(el => el.classList.remove('active'));
+    if (event && event.currentTarget) event.currentTarget.classList.add('active');
+    selectTrackLayout(layoutKey);
 }
 
 function selectTrackLayout(val) {
@@ -3081,6 +3107,8 @@ window.setDifficulty = setDifficulty;
 window.selectCarClass = selectCarClass;
 window.selectTrackLayout = selectTrackLayout;
 window.selectUnderglow = selectUnderglow;
+window.switchGarageTab = switchGarageTab;
+window.selectTrackCard = selectTrackCard;
 window.toggleFS = toggleFS;
 window.toggleCamera = toggleCamera;
 window.openSettings = openSettings;
