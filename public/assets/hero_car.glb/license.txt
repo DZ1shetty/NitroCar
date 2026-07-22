@@ -1,0 +1,11 @@
+Model Information:
+* title:	RC F1
+* source:	https://sketchfab.com/3d-models/rc-f1-d8cbdb0c568441b784bda5df4256c9e6
+* author:	blakebella (https://sketchfab.com/blake2black)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "RC F1" (https://sketchfab.com/3d-models/rc-f1-d8cbdb0c568441b784bda5df4256c9e6) by blakebella (https://sketchfab.com/blake2black) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
