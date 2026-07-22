@@ -1639,6 +1639,201 @@ input[type="color"]::-webkit-color-swatch {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.02em;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-shadow: 0 0 20px rgba(255, 30, 30, 0.6);
+    padding: 10px 24px;
+    background: rgba(255, 30, 30, 0.08);
+    border: 1px solid rgba(255, 30, 30, 0.3);
+    border-radius: var(--radius);
+    animation: pbPulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes pbPulse {
+    from {
+        box-shadow: 0 0 10px rgba(255, 30, 30, 0.2);
+    }
+
+    to {
+        box-shadow: 0 0 30px rgba(255, 30, 30, 0.5);
+    }
+}
+
+/* Post-race action row */
+.post-race-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.post-race-actions .btn-cinematic {
+    margin-top: 0;
+}
+
+/* Best time chips on main menu */
+.best-time-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-heading);
+    font-size: 0.65rem;
+    color: var(--accent);
+    background: rgba(255, 30, 30, 0.07);
+    border: 1px solid rgba(255, 30, 30, 0.2);
+    border-radius: 4px;
+    padding: 2px 8px;
+    margin-left: 8px;
+    letter-spacing: 0.05em;
+}
+
+/* Driver nationality flag in results */
+.driver-flag {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+/* ── PHASE 5 - TIRE WEAR HUD ── */
+.tire-wear-hud {
+    position: fixed;
+    bottom: 40px;
+    left: 40px;
+    background: var(--panel-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-bottom: 3px solid var(--accent);
+    padding: 10px 20px;
+    transform: skewX(-15deg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 100;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.tire-wear-label {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    transform: skewX(15deg);
+}
+
+.tire-icons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 8px;
+    transform: skewX(15deg);
+}
+
+.tire-icon {
+    width: 20px;
+    height: 12px;
+    border-radius: 2px;
+    background: var(--accent);
+    transition: background 0.5s;
+    box-shadow: 0 0 6px currentColor;
+}
+
+/* ══════════════════════════════════════════════════════
+   PHASE 6 — DRIFT SCORE HUD
+══════════════════════════════════════════════════════ */
+.drift-score-hud {
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%) skewX(-15deg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--panel-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-bottom: 4px solid var(--accent);
+    padding: 10px 30px;
+    z-index: 100;
+    min-width: 150px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.drift-total-label {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    transform: skewX(15deg);
+}
+
+.drift-total {
+    font-family: var(--font-heading);
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 0.9;
+    color: var(--accent);
+    text-shadow: 0 0 15px var(--accent-glow);
+    transition: color 0.3s;
+    transform: skewX(15deg);
+    margin-top: 5px;
+}
+
+.drift-popup {
+    position: fixed;
+    top: 35%;
+    left: 50%;
+    transform: translate(-50%, -50%) skewX(-15deg);
+    font-family: var(--font-heading);
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-shadow: 0 0 20px rgba(255, 30, 30, 0.8), 0 0 40px rgba(255, 30, 30, 0.4);
+    pointer-events: none;
+    z-index: 200;
+    animation: driftPop 1.5s ease-out forwards;
+    white-space: nowrap;
+}
+
+@keyframes driftPop {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.3);
+    }
+
+    60% {
+        opacity: 1;
+        transform: translate(-50%, -80%) scale(1.0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -120%) scale(0.8);
+    }
+}
+
+/* Brand Header (from index.html) */
+.brand-header {
+    margin-bottom: 20px;
+}
+
+.brand-subtitle {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--accent);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    font-style: italic;
+    margin-bottom: 4px;
+}
+
+.brand-title {
+    font-family: var(--font-heading);
+    font-size: 4.5rem;
+    line-height: 0.85;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
     text-shadow: 0 0 20px var(--accent-glow);
 }
 
@@ -1653,18 +1848,16 @@ input[type="color"]::-webkit-color-swatch {
     letter-spacing: 0.05em;
     margin-bottom: 24px;
 }
- . s l i d e - i n - r i g h t   { 
-         a n i m a t i o n :   s l i d e I n R i g h t   1 s   c u b i c - b e z i e r ( 0 . 1 6 ,   1 ,   0 . 3 ,   1 )   f o r w a r d s ; 
- } 
- @ k e y f r a m e s   s l i d e I n R i g h t   { 
-         f r o m   { 
-                 o p a c i t y :   0 ; 
-                 t r a n s f o r m :   t r a n s l a t e X ( 1 0 0 p x ) ; 
-         } 
-         t o   { 
-                 o p a c i t y :   1 ; 
-                 t r a n s f o r m :   t r a n s l a t e X ( 0 ) ; 
-         } 
- } 
-  
- 
+.slide-in-right { 
+    animation: slideInRight 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+} 
+@keyframes slideInRight { 
+    from { 
+        opacity: 0; 
+        transform: translateX(100px); 
+    } 
+    to { 
+        opacity: 1; 
+        transform: translateX(0); 
+    } 
+}

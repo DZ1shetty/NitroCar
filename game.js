@@ -2865,41 +2865,7 @@ function applyDifficultyToRivals() {
 }
 
 
-function togglePause() {
-    if (!raceStarted || gameOver) return;
-    
-    // Don't allow pausing if currently resuming
-    if (isResuming && !isPaused) return; 
 
-    isPaused = !isPaused;
-    let pm = document.getElementById('pauseMenu');
-    pm.style.display = isPaused ? 'flex' : 'none';
-    if (isPaused) {
-        pm.classList.remove('anim-modal-drop');
-        void pm.offsetWidth;
-        pm.classList.add('anim-modal-drop');
-    }
-    
-    if (!isPaused) {
-        // Resume game with countdown
-        isResuming = true;
-        countdown = 3;
-        document.getElementById('resumeText').style.display = 'block';
-        document.getElementById('resumeText').innerText = countdown;
-        
-        if (countdownTimer) clearInterval(countdownTimer);
-        countdownTimer = setInterval(() => {
-            countdown--;
-            if (countdown > 0) {
-                document.getElementById('resumeText').innerText = countdown;
-            } else {
-                document.getElementById('resumeText').style.display = 'none';
-                isResuming = false;
-                clearInterval(countdownTimer);
-            }
-        }, 1000);
-    }
-}
 
 let menuAngle = 0;
 let menuTimer = 0;
