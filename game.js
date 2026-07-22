@@ -11,7 +11,7 @@ let cameraMode = '3RD_PERSON';
 let cinematicStartTime = 0;
 let defaultCameraMode = '3RD_PERSON';
 let shakeMultiplier = 1.0;
-let sfxMasterVolume = 0.8;
+let sfxMasterVolume = 0.2;
 
 function toggleCamera() {
     cameraMode = cameraMode === '3RD_PERSON' ? '1ST_PERSON' : '3RD_PERSON';
@@ -145,14 +145,15 @@ function togglePause() {
     
     if (isPaused) {
         pauseTime = Date.now();
-        document.getElementById('pauseMenu').style.display = 'flex';
-    } else {
-        document.getElementById('pauseMenu').style.display = 'none';
-        isResuming = true;
+        let pm = document.getElementById('pauseMenu');
+        pm.style.display = 'flex';
+        pm.classList.remove('anim-modal-drop');
+        void pm.offsetWidth;
+        pm.classList.add('anim-modal-drop');
         
         const resumeText = document.getElementById('resumeText');
         resumeText.style.display = 'block';
-        resumeText.style.color = '#ffea00';
+        resumeText.style.color = '#ffffff';
         resumeText.textContent = '3';
         
         let count = 3;
@@ -162,7 +163,7 @@ function togglePause() {
                 resumeText.textContent = count;
             } else if (count === 0) {
                 resumeText.textContent = 'GO!!!';
-                resumeText.style.color = '#00ff00';
+                resumeText.style.color = '#ffffff';
             } else {
                 clearInterval(countdownInterval);
                 resumeText.style.display = 'none';
@@ -170,6 +171,8 @@ function togglePause() {
                 raceStartTime += (Date.now() - pauseTime);
             }
         }, 1000);
+    } else {
+        document.getElementById('pauseMenu').style.display = 'none';
     }
 }
 // ---- Texture Generators ----
@@ -568,15 +571,8 @@ function init3D() {
     scene.fog = new THREE.FogExp2('#0ea5e9', 0.00015); 
     scene.environment = createEnvironmentMap(); // Applies reflections to all metallic materials!
 
-    // Load F1 Car Model
-    const loader = new THREE.GLTFLoader();
-    loader.load('assets/hero_car.glb', function (gltf) {
-        window.f1CarModel = gltf.scene;
-        // Optionally adjust initial scale if the blender model is huge/tiny
-        window.f1CarModel.scale.set(6.0, 6.0, 6.0); 
-    }, undefined, function (error) {
-        console.error("Error loading F1 car:", error);
-    });
+    // Custom GLB loading is restricted to the landing page only.
+    window.f1CarModel = null;
 
     camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 4000);
     
@@ -2490,7 +2486,11 @@ function loop() {
     }
 
     if (player.finished && (Date.now() - player.finishTime > 5000) && document.getElementById('postRaceModal').style.display === 'none') {
-        document.getElementById('postRaceModal').style.display = 'flex';
+        let prm = document.getElementById('postRaceModal');
+        prm.style.display = 'flex';
+        prm.classList.remove('anim-modal-drop');
+        void prm.offsetWidth;
+        prm.classList.add('anim-modal-drop');
 
         // Update rank banner
         let rankText = rank + (rank === 1 ? 'ST' : rank === 2 ? 'ND' : rank === 3 ? 'RD' : 'TH');
@@ -2544,46 +2544,44 @@ function loop() {
         if (!isPaused && raceStarted && !player.finished) {
             let speedRatio = Math.abs(player.speed) / player.maxSpeed;
             if (sounds.engine.buffer) {
-                // Pitch shift the engine
+                // Pitch shift the engine gently, keep volume soft and subtle
                 sounds.engine.setPlaybackRate(0.5 + speedRatio * 1.5);
-                sounds.engine.setVolume((0.2 + speedRatio * 0.4) * sfxMasterVolume);
+                sounds.engine.setVolume((0.05 + speedRatio * 0.15) * sfxMasterVolume);
             }
 
-            // Phase 4: Dynamic BGM — subtly speed up music with car speed
+            // Keep song playback rate constant at 1.0 (normal speed)
             const bgm = document.getElementById('bgm');
-            if (bgm && !bgm.paused) {
-                const targetRate = 1.0 + speedRatio * 0.12; // up to 12% faster at max speed
-                bgm.playbackRate += (targetRate - bgm.playbackRate) * 0.03;
+            if (bgm) {
+                bgm.playbackRate = 1.0;
             }
 
-            // Phase 4: Crowd roar near start/finish straight
-            // Track start/finish is near checkpoint[0]
+            // Crowd roar near start/finish straight
             if (typeof checkpoints !== 'undefined' && checkpoints.length > 0) {
                 const sfX = checkpoints[0].x, sfZ = checkpoints[0].y;
                 const distToSF = Math.hypot(player.x - sfX, player.y - sfZ);
-                const crowdVol = Math.max(0, 1 - distToSF / 600) * sfxMasterVolume * 0.6;
-                if (crowdVol > 0.05 && typeof sounds.crowd !== 'undefined' && sounds.crowd && sounds.crowd.buffer) {
+                const crowdVol = Math.max(0, 1 - distToSF / 600) * sfxMasterVolume * 0.3;
+                if (crowdVol > 0.03 && typeof sounds.crowd !== 'undefined' && sounds.crowd && sounds.crowd.buffer) {
                     if (!sounds.crowd.isPlaying) sounds.crowd.setVolume(crowdVol), sounds.crowd.play();
                     else sounds.crowd.setVolume(crowdVol);
-                } else if (typeof sounds.crowd !== 'undefined' && sounds.crowd && sounds.crowd.isPlaying && crowdVol <= 0.05) {
+                } else if (typeof sounds.crowd !== 'undefined' && sounds.crowd && sounds.crowd.isPlaying && crowdVol <= 0.03) {
                     sounds.crowd.stop();
                 }
             }
             
-            // Screech
+            // Soft tire screech
             if (player.driftTime > 5 && surfaceGrip(player.x, player.y) > 0.5) {
                 if (sounds.screech.buffer && !sounds.screech.isPlaying) {
-                    sounds.screech.setVolume(0.4);
+                    sounds.screech.setVolume(0.15 * sfxMasterVolume);
                     sounds.screech.play();
                 }
             } else {
                 if (sounds.screech.isPlaying) sounds.screech.stop();
             }
             
-            // Nitro
+            // Soft nitro burst sound
             if (player.nitroActive > 0) {
                 if (sounds.nitro.buffer && !sounds.nitro.isPlaying) {
-                    sounds.nitro.setVolume(0.8);
+                    sounds.nitro.setVolume(0.25 * sfxMasterVolume);
                     sounds.nitro.play();
                 }
             } else {
@@ -2743,7 +2741,11 @@ function startGame() {
     // Show loading screen for 5 seconds
     setTimeout(() => {
         document.getElementById('loadingScreen').style.display = 'none';
-        document.getElementById('hud').style.display = 'flex';
+        let hud = document.getElementById('hud');
+        hud.style.display = 'flex';
+        hud.classList.remove('anim-scale-in');
+        void hud.offsetWidth;
+        hud.classList.add('anim-scale-in');
         
         // Initial camera snap to player so the cinematic lerps in from afar
         cameraMode = 'CINEMATIC';
@@ -2870,7 +2872,13 @@ function togglePause() {
     if (isResuming && !isPaused) return; 
 
     isPaused = !isPaused;
-    document.getElementById('pauseMenu').style.display = isPaused ? 'flex' : 'none';
+    let pm = document.getElementById('pauseMenu');
+    pm.style.display = isPaused ? 'flex' : 'none';
+    if (isPaused) {
+        pm.classList.remove('anim-modal-drop');
+        void pm.offsetWidth;
+        pm.classList.add('anim-modal-drop');
+    }
     
     if (!isPaused) {
         // Resume game with countdown
@@ -2896,7 +2904,7 @@ function togglePause() {
 let menuAngle = 0;
 let menuTimer = 0;
 let currentWeather = 'summer';
-let customColor = '#00f3ff';
+let customColor = '#ff2a2a';
 let groundMesh = null;
 
 function initMenu() {

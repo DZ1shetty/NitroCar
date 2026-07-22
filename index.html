@@ -1,706 +1,2595 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nitro Racer | Simulator</title>
-    <meta name="description" content="High-performance browser racing simulator.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600;700&family=Inter:wght@300;400;600;800&family=JetBrains+Mono:ital,wght@1,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nitro Racer</title>
+    <meta
+      name="description"
+      content="A browser-based 3D racing game. Drift, boost, beat 3 AI rivals. No install."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600;700&family=Inter:wght@300;400;600;800&family=JetBrains+Mono:ital,wght@1,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+
     <style>
-        /* Specific Landing Page Styles */
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background-color: #050507;
-            font-family: var(--font-body);
-            color: var(--text-main);
-        }
+      /* ═══════════════════════════════════════════════════
+         NITRO RACER — MONSTROUS LANDING PAGE
+         Palette: #E8000D (red), #0a0a0a (black), #ffffff (white)
+      ═══════════════════════════════════════════════════ */
+      @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@700&display=swap');
 
-        /* Animated Grid Background */
-        .animated-bg {
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            perspective: 1000px;
-            overflow: hidden;
-        }
+      :root {
+        --red: #e8000d;
+        --red-glow: rgba(232, 0, 13, 0.6);
+        --red-dim: rgba(232, 0, 13, 0.15);
+        --black: #0a0a0a;
+        --white: #ffffff;
+        --white-dim: rgba(255,255,255,0.55);
+      }
 
-        .bg-grid {
-            position: absolute;
-            width: 200vw;
-            height: 200vh;
-            bottom: -50vh;
-            left: -50vw;
-            background-image: 
-                linear-gradient(rgba(255, 30, 30, 0.15) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 30, 30, 0.15) 1px, transparent 1px);
-            background-size: 50px 50px;
-            transform: rotateX(75deg);
-            animation: gridMove 5s linear infinite;
-        }
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        @keyframes gridMove {
-            0% { transform: rotateX(75deg) translateY(0); }
-            100% { transform: rotateX(75deg) translateY(50px); }
-        }
+      body {
+        margin: 0; padding: 0;
+        overflow: hidden;
+        background: var(--black);
+        font-family: var(--font-body);
+        color: var(--white);
+        cursor: crosshair;
+      }
 
-        .bg-glow {
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at center 80%, rgba(255, 30, 30, 0.2) 0%, transparent 60%);
-        }
+      /* ─── PARTICLE CANVAS ─── */
+      #particleCanvas {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+      }
 
-        .bg-vignette {
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at center, transparent 30%, #050507 100%);
-        }
+      /* ─── BACKGROUND ─── */
+      .animated-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        overflow: hidden;
+      }
 
-        /* Split Screen Hero Layout */
-        .hero-split {
-            display: flex;
-            width: 100vw;
-            height: 100vh;
-            padding: 5vh 5vw;
-        }
+      .bg-grid {
+        position: absolute;
+        width: 200vw;
+        height: 200vh;
+        bottom: -30vh;
+        left: -50vw;
+        background-image:
+          linear-gradient(rgba(232,0,13,0.12) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(232,0,13,0.12) 1px, transparent 1px);
+        background-size: 80px 80px;
+        transform: rotateX(78deg);
+        animation: gridScroll 0.75s linear infinite;
+        transform-origin: bottom center;
+      }
 
-        .hero-left, .hero-right {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
+      @keyframes gridScroll {
+        from { transform: rotateX(78deg) translateY(0); }
+        to   { transform: rotateX(78deg) translateY(80px); }
+      }
 
-        .hero-left {
-            padding-right: 5vw;
-            animation: slideInLeft 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            opacity: 0;
-        }
+      .bg-glow {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(ellipse 80% 50% at 50% 100%, rgba(232,0,13,0.35) 0%, transparent 70%),
+          radial-gradient(ellipse 40% 30% at 50% 50%, rgba(232,0,13,0.08) 0%, transparent 70%);
+      }
 
-        @keyframes slideInLeft {
-            0% { transform: translateX(-50px); opacity: 0; }
-            100% { transform: translateX(0); opacity: 1; }
-        }
+      .bg-vignette {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse 90% 90% at 50% 50%, transparent 40%, #050505 100%);
+      }
 
-        /* Branding */
-        .hero-title {
-            font-family: var(--font-heading);
-            font-size: 7rem;
-            line-height: 0.85;
-            font-weight: 700;
-            color: var(--text-main);
-            text-transform: uppercase;
-            letter-spacing: 0.02em;
-            margin-bottom: 20px;
-            position: relative;
-        }
+      /* ─── SCANLINES overlay ─── */
+      .animated-bg::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent, transparent 3px,
+          rgba(0,0,0,0.25) 3px, rgba(0,0,0,0.25) 4px
+        );
+        pointer-events: none;
+        z-index: 10;
+      }
 
-        .glitch-layer {
-            color: var(--accent);
-            text-shadow: 0 0 20px rgba(255, 30, 30, 0.8);
-            display: block;
-        }
+      /* ─── HERO LAYOUT ─── */
+      .hero-split {
+        position: relative;
+        z-index: 10;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100vw;
+        height: 100vh;
+        align-items: center;
+        padding: 0 6vw;
+        gap: 0;
+      }
 
-        .hero-line {
-            width: 60px;
-            height: 4px;
-            background: var(--accent);
-            margin-bottom: 25px;
-            box-shadow: 0 0 10px var(--accent);
-        }
+      /* ─── LEFT: BRANDING ─── */
+      .hero-left {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding-right: 2vw;
+        animation: blastIn 0.9s cubic-bezier(0.16,1,0.3,1) forwards;
+        opacity: 0;
+      }
 
-        .hero-desc {
-            font-size: 1.2rem;
-            color: var(--text-dim);
-            max-width: 450px;
-            margin-bottom: 50px;
-            line-height: 1.5;
-        }
+      @keyframes blastIn {
+        0%   { transform: translateX(-80px) skewX(-5deg); opacity: 0; }
+        60%  { transform: translateX(10px)  skewX(2deg);  opacity: 1; }
+        100% { transform: translateX(0)     skewX(0deg);  opacity: 1; }
+      }
 
-        /* Actions */
-        .hero-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            max-width: 400px;
-        }
+      .hero-eyebrow {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.35em;
+        color: var(--red);
+        text-transform: uppercase;
+        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .hero-eyebrow::before {
+        content: '';
+        display: block;
+        width: 40px;
+        height: 2px;
+        background: var(--red);
+        box-shadow: 0 0 8px var(--red);
+      }
 
-        .btn-primary {
-            position: relative;
-            background: var(--accent);
-            color: #fff;
-            padding: 20px 40px;
-            font-family: var(--font-heading);
-            font-size: 2rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            text-decoration: none;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transform: skewX(-10deg);
-            overflow: hidden;
-            transition: all 0.3s ease;
-            box-shadow: 0 0 20px rgba(255, 30, 30, 0.4);
-        }
+      .hero-title {
+        font-family: 'Bebas Neue', 'Teko', sans-serif;
+        font-size: clamp(5rem, 9vw, 11rem);
+        line-height: 0.82;
+        font-weight: 900;
+        color: var(--white);
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        margin-bottom: 24px;
+        position: relative;
+        user-select: none;
+      }
 
-        .btn-primary .btn-text, .btn-primary .btn-arrow {
-            transform: skewX(10deg);
-            position: relative;
-            z-index: 2;
-        }
+      .glitch-layer {
+        display: block;
+        color: var(--red);
+        text-shadow:
+          0 0 30px var(--red-glow),
+          0 0 80px rgba(232,0,13,0.3),
+          2px 2px 0 #7a0006;
+        animation: glitchText 6s infinite;
+        position: relative;
+      }
 
-        .btn-primary .btn-arrow {
-            font-family: var(--font-mono);
-            font-weight: 700;
-            transition: transform 0.3s ease;
-        }
+      @keyframes glitchText {
+        0%,90%,100% { clip-path: none; transform: none; }
+        91% { clip-path: polygon(0 20%, 100% 20%, 100% 35%, 0 35%); transform: translateX(-4px); }
+        92% { clip-path: polygon(0 60%, 100% 60%, 100% 75%, 0 75%); transform: translateX(4px);  }
+        93% { clip-path: polygon(0 80%, 100% 80%, 100% 90%, 0 90%); transform: translateX(-2px); }
+        94% { clip-path: none; transform: none; }
+      }
 
-        .btn-primary:hover {
-            box-shadow: 0 0 40px rgba(255, 30, 30, 0.8);
-            background: #fff;
-            color: var(--accent);
-            transform: skewX(-10deg) scale(1.05);
-        }
+      .title-sub {
+        display: block;
+        color: var(--white);
+        text-shadow: 0 2px 0 rgba(0,0,0,0.8);
+      }
 
-        .btn-primary:hover .btn-arrow {
-            transform: skewX(10deg) translateX(10px);
-        }
+      .hero-stripe {
+        width: 80px;
+        height: 5px;
+        background: linear-gradient(90deg, var(--red), rgba(232,0,13,0.3));
+        margin-bottom: 24px;
+        box-shadow: 0 0 20px var(--red-glow);
+        position: relative;
+        overflow: hidden;
+      }
+      .hero-stripe::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent, #fff, transparent);
+        animation: stripeShine 2s ease-in-out infinite;
+      }
+      @keyframes stripeShine {
+        0%,100% { transform: translateX(-100%); }
+        50%      { transform: translateX(200%); }
+      }
 
-        .btn-scanline {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 2px,
-                rgba(0,0,0,0.2) 2px,
-                rgba(0,0,0,0.2) 4px
-            );
-            z-index: 1;
-        }
+      .hero-desc {
+        font-size: 1rem;
+        color: var(--white-dim);
+        max-width: 420px;
+        margin-bottom: 48px;
+        line-height: 1.7;
+        font-weight: 300;
+        letter-spacing: 0.03em;
+      }
 
-        .btn-secondary-outline {
-            background: transparent;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            color: var(--text-main);
-            padding: 15px 30px;
-            font-family: var(--font-heading);
-            font-size: 1.5rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            cursor: pointer;
-            transform: skewX(-10deg);
-            transition: all 0.3s ease;
-            text-align: center;
-        }
+      /* ─── CTA BUTTONS ─── */
+      .hero-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        max-width: 380px;
+      }
 
-        .btn-secondary-outline .btn-text {
-            transform: skewX(10deg);
-            display: block;
-        }
+      .btn-primary {
+        position: relative;
+        background: var(--red);
+        color: #fff;
+        padding: 18px 44px;
+        font-family: 'Bebas Neue', 'Teko', sans-serif;
+        font-size: 2rem;
+        letter-spacing: 0.1em;
+        font-weight: 600;
+        text-transform: uppercase;
+        text-decoration: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 100%, 0 100%);
+        overflow: hidden;
+        transition: all 0.25s ease;
+        box-shadow: 0 0 30px rgba(232,0,13,0.5), inset 0 0 30px rgba(0,0,0,0.3);
+        cursor: pointer;
+      }
 
-        .btn-secondary-outline:hover {
-            border-color: var(--text-main);
-            background: rgba(255, 255, 255, 0.05);
-            transform: skewX(-10deg) scale(1.05);
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
-        }
+      .btn-primary::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent 60%, rgba(255,255,255,0.15));
+        z-index: 1;
+      }
 
-        /* Right Side: Telemetry Dashboard */
-        .hero-right {
-            align-items: flex-end;
-            animation: slideInRight 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            opacity: 0;
-            animation-delay: 0.2s;
-        }
+      .btn-primary .btn-text, .btn-primary .btn-arrow {
+        position: relative;
+        z-index: 2;
+      }
 
-        @keyframes slideInRight {
-            0% { transform: translateX(50px); opacity: 0; }
-            100% { transform: translateX(0); opacity: 1; }
-        }
+      .btn-primary .btn-arrow {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        transition: transform 0.3s ease;
+        font-size: 1.5rem;
+      }
 
-        .telemetry-dashboard {
-            background: var(--panel-bg);
-            border: 1px solid rgba(255, 30, 30, 0.3);
-            backdrop-filter: blur(10px);
-            padding: 40px;
-            width: 450px;
-            position: relative;
-            box-shadow: inset 0 0 20px rgba(255, 30, 30, 0.05);
-        }
+      .btn-primary:hover {
+        box-shadow: 0 0 60px rgba(232,0,13,0.9), 0 0 100px rgba(232,0,13,0.3);
+        transform: scale(1.04) translateY(-2px);
+        background: #ff1a24;
+      }
+      .btn-primary:hover .btn-arrow { transform: translateX(8px); }
 
-        .telemetry-dashboard::before {
-            content: '';
-            position: absolute;
-            top: -1px; left: -1px;
-            width: 20px; height: 20px;
-            border-top: 2px solid var(--accent);
-            border-left: 2px solid var(--accent);
-        }
-        
-        .telemetry-dashboard::after {
-            content: '';
-            position: absolute;
-            bottom: -1px; right: -1px;
-            width: 20px; height: 20px;
-            border-bottom: 2px solid var(--accent);
-            border-right: 2px solid var(--accent);
-        }
+      .btn-scanline {
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+          0deg, transparent, transparent 2px,
+          rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px
+        );
+        z-index: 1;
+      }
 
-        .dash-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-family: var(--font-mono);
-            font-size: 0.9rem;
-            color: var(--accent);
-            margin-bottom: 30px;
-            letter-spacing: 0.1em;
-        }
+      .btn-secondary-outline {
+        background: transparent;
+        border: 2px solid rgba(255,255,255,0.18);
+        color: var(--white);
+        padding: 14px 30px;
+        font-family: 'Bebas Neue', 'Teko', sans-serif;
+        font-size: 1.6rem;
+        letter-spacing: 0.1em;
+        font-weight: 600;
+        text-transform: uppercase;
+        cursor: pointer;
+        clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 0 100%);
+        transition: all 0.25s ease;
+        text-align: center;
+      }
 
-        .dash-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--accent);
-            border-radius: 50%;
-            animation: blink 1s infinite;
-        }
+      .btn-secondary-outline .btn-text { display: block; }
 
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
+      .btn-secondary-outline:hover {
+        border-color: var(--white);
+        background: rgba(255,255,255,0.07);
+        box-shadow: 0 0 20px rgba(255,255,255,0.15);
+        transform: scale(1.03) translateY(-1px);
+      }
 
-        .dash-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-        }
+      /* ─── RIGHT: TELEMETRY ─── */
+      .hero-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        justify-content: center;
+        animation: blastInRight 0.9s cubic-bezier(0.16,1,0.3,1) 0.15s forwards;
+        opacity: 0;
+      }
 
-        .dash-card {
-            display: flex;
-            flex-direction: column;
-        }
+      @keyframes blastInRight {
+        0%   { transform: translateX(80px) skewX(5deg); opacity: 0; }
+        60%  { transform: translateX(-10px) skewX(-2deg); opacity: 1; }
+        100% { transform: translateX(0)    skewX(0deg); opacity: 1; }
+      }
 
-        .dash-label {
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            color: var(--text-dim);
-            margin-bottom: 5px;
-            letter-spacing: 0.1em;
-        }
+      .telemetry-dashboard {
+        background: rgba(10,10,10,0.85);
+        border: 1px solid rgba(232,0,13,0.25);
+        backdrop-filter: blur(16px);
+        padding: 36px 40px;
+        width: 420px;
+        position: relative;
+        box-shadow:
+          inset 0 0 40px rgba(232,0,13,0.06),
+          0 0 60px rgba(232,0,13,0.1),
+          0 20px 60px rgba(0,0,0,0.6);
+        clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%);
+      }
 
-        .dash-value-wrap {
-            display: flex;
-            align-items: baseline;
-            gap: 5px;
-            margin-bottom: 8px;
-        }
+      .telemetry-dashboard::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 2px;
+        background: linear-gradient(90deg, var(--red), transparent);
+        box-shadow: 0 0 15px var(--red);
+      }
 
-        .dash-value {
-            font-family: var(--font-heading);
-            font-size: 3.5rem;
-            line-height: 1;
-            color: var(--text-main);
-            font-variant-numeric: tabular-nums;
-        }
+      .telemetry-dashboard::after {
+        content: '';
+        position: absolute;
+        bottom: 0; left: 0;
+        right: 0; height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(232,0,13,0.4), transparent);
+      }
 
-        .dash-unit {
-            font-family: var(--font-heading);
-            font-size: 1.5rem;
-            color: var(--accent);
-        }
+      .dash-corner {
+        position: absolute;
+        bottom: -1px; right: -1px;
+        width: 24px; height: 24px;
+        border-bottom: 2px solid var(--red);
+        border-right: 2px solid var(--red);
+        box-shadow: 4px 4px 10px rgba(232,0,13,0.4);
+      }
 
-        .dash-bar {
-            height: 2px;
-            background: rgba(255, 255, 255, 0.1);
-            width: 100%;
-            position: relative;
-        }
+      .dash-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--red);
+        margin-bottom: 28px;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
 
-        .dash-fill {
-            position: absolute;
-            top: 0; left: 0; bottom: 0;
-            background: var(--accent);
-            width: 0%;
-            transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 0 10px var(--accent);
-        }
+      .dash-dot {
+        width: 8px; height: 8px;
+        background: var(--red);
+        border-radius: 50%;
+        animation: blink 1.2s infinite;
+        box-shadow: 0 0 8px var(--red);
+      }
 
-        /* Info Modal */
-        #infoModal {
-            position: fixed;
-            inset: 0;
-            background: rgba(5,5,7,0.9);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-            backdrop-filter: blur(5px);
-        }
-        #infoModal.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .modal-content {
-            background: var(--bg-base);
-            border: 1px solid var(--border);
-            padding: 50px;
-            max-width: 800px;
-            width: 90%;
-            position: relative;
-            border-top: 3px solid var(--accent);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-        .close-btn {
-            position: absolute;
-            top: 20px; right: 20px;
-            background: none; border: none;
-            color: var(--text-main);
-            font-size: 1.5rem;
-            cursor: pointer;
-            font-family: var(--font-body);
-        }
-        .close-btn:hover { color: var(--accent); }
-        .modal-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-        }
-        .modal-col h3 {
-            font-family: var(--font-heading);
-            font-size: 2rem;
-            color: var(--accent);
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 10px;
-            text-transform: uppercase;
-        }
-        .modal-list { list-style: none; padding: 0; margin: 0; }
-        .modal-list li {
-            margin-bottom: 15px;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .modal-list kbd {
-            background: rgba(255,30,30,0.1);
-            padding: 4px 10px;
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            color: var(--text-main);
-            border: 1px solid rgba(255,30,30,0.3);
-            border-radius: 2px;
-            min-width: 45px;
-            text-align: center;
-        }
+      @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.2; } }
 
-        /* Loading Screen */
-        #loadingScreen {
-            position: fixed;
-            inset: 0;
-            background: var(--bg-base);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.8s ease;
+      .dash-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .dash-card { display: flex; flex-direction: column; }
+
+      .dash-label {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: rgba(255,255,255,0.35);
+        margin-bottom: 4px;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
+
+      .dash-value-wrap {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+
+      .dash-value {
+        font-family: 'Bebas Neue', 'Teko', sans-serif;
+        font-size: 4rem;
+        line-height: 1;
+        color: var(--white);
+        font-variant-numeric: tabular-nums;
+        text-shadow: 0 0 20px rgba(255,255,255,0.2);
+        letter-spacing: 0.02em;
+      }
+
+      .dash-unit {
+        font-family: var(--font-mono);
+        font-size: 1rem;
+        color: var(--red);
+        letter-spacing: 0.1em;
+      }
+
+      .dash-bar {
+        height: 2px;
+        background: rgba(255,255,255,0.08);
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .dash-fill {
+        position: absolute;
+        top: 0; left: 0; bottom: 0;
+        background: linear-gradient(90deg, var(--red), #ff6070);
+        width: 0%;
+        transition: width 1.8s cubic-bezier(0.16,1,0.3,1);
+        box-shadow: 0 0 10px var(--red);
+      }
+
+      /* ─── INFO MODAL ─── */
+      #infoModal {
+        position: fixed;
+        inset: 0;
+        background: rgba(5,5,7,0.92);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        backdrop-filter: blur(8px);
+      }
+      #infoModal.active { opacity: 1; pointer-events: auto; }
+      .modal-content {
+        background: #0f0f0f;
+        border: 1px solid rgba(232,0,13,0.25);
+        border-top: 3px solid var(--red);
+        padding: 50px;
+        max-width: 800px;
+        width: 90%;
+        position: relative;
+        box-shadow: 0 0 80px rgba(232,0,13,0.15), 0 40px 80px rgba(0,0,0,0.7);
+        clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 0 100%);
+        animation: modalDrop 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+      }
+      .close-btn {
+        position: absolute;
+        top: 18px; right: 20px;
+        background: none;
+        border: none;
+        color: var(--white-dim);
+        font-size: 1.8rem;
+        cursor: pointer;
+        transition: color 0.2s;
+      }
+      .close-btn:hover { color: var(--red); }
+      .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+      .modal-col h3 {
+        font-family: 'Bebas Neue', 'Teko', sans-serif;
+        font-size: 2rem;
+        color: var(--red);
+        margin-bottom: 20px;
+        border-bottom: 1px solid rgba(232,0,13,0.2);
+        padding-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .modal-list { list-style: none; padding: 0; margin: 0; }
+      .modal-list li {
+        margin-bottom: 14px;
+        font-size: 0.88rem;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        color: var(--white-dim);
+      }
+      .modal-list kbd {
+        background: rgba(232,0,13,0.1);
+        padding: 4px 10px;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        color: var(--white);
+        border: 1px solid rgba(232,0,13,0.3);
+        border-radius: 2px;
+        min-width: 45px;
+        text-align: center;
+      }
+
+      /* ─── LOADING SCREEN ─── */
+      #landingScreenMain {
+        position: fixed; inset: 0;
+        background: var(--black);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.8s ease;
+      }
+      #landingScreenMain.fade-out { opacity: 0; pointer-events: none; }
+
+      #loadingScreen {
+        position: fixed; inset: 0;
+        background: var(--black);
+        z-index: 150;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.8s ease;
+      }
+      #loadingScreen.fade-out { opacity: 0; pointer-events: none; }
+
+      .loading-title {
+        font-family: 'Bebas Neue', 'Teko', sans-serif;
+        font-size: 5rem;
+        color: var(--red);
+        margin-bottom: 24px;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        text-shadow: 0 0 40px rgba(232,0,13,0.7), 0 0 80px rgba(232,0,13,0.3);
+      }
+      .loading-bar {
+        width: 360px; height: 2px;
+        background: rgba(255,255,255,0.08);
+        position: relative;
+        overflow: hidden;
+      }
+      .loading-fill {
+        position: absolute;
+        top: 0; left: 0; bottom: 0;
+        width: 0%;
+        background: linear-gradient(90deg, var(--red), #ff6070);
+        box-shadow: 0 0 15px var(--red);
+        transition: width 0.1s linear;
+      }
+      .loading-text {
+        margin-top: 16px;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: rgba(255,255,255,0.3);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      /* ─── ANIMATIONS ─── */
+      @keyframes slideUpFade {
+        from { opacity: 0; transform: translateY(40px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes scaleIn {
+        from { opacity: 0; transform: scale(0.9); }
+        to   { opacity: 1; transform: scale(1); }
+      }
+      @keyframes modalDrop {
+        from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      @keyframes backdropFadeIn {
+        from { background: rgba(5,5,7,0); backdrop-filter: blur(0px); }
+        to   { background: rgba(5,5,7,0.85); backdrop-filter: blur(15px); }
+      }
+      .anim-slide-up { animation: slideUpFade 0.5s cubic-bezier(0.16,1,0.3,1) forwards; }
+      .anim-scale-in { animation: scaleIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
+      .anim-modal-drop { animation: modalDrop 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
+      .anim-backdrop-fade { animation: backdropFadeIn 0.4s ease forwards; }
+
+      /* Shared Styles from landing page */
+      .hero-split {
+        display: flex;
+        width: 100vw;
+        height: 100vh;
+        padding: 4vh 5vw;
+      }
+      .hero-left,
+      .hero-right {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        z-index: 10;
+        pointer-events: auto;
+      }
+      .hero-left {
+        padding-right: 5vw;
+        padding-top: 2vh;
+        animation: slideInLeft 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      @keyframes slideInLeft {
+        0% {
+          transform: translateX(-50px);
+          opacity: 0;
         }
-        #loadingScreen.fade-out { opacity: 0; pointer-events: none; }
-        .loading-title {
-            font-family: var(--font-heading);
-            font-size: 4rem;
-            color: var(--accent);
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            text-shadow: 0 0 20px rgba(255, 30, 30, 0.5);
+        100% {
+          transform: translateX(0);
+          opacity: 1;
         }
-        .loading-bar {
-            width: 300px;
-            height: 2px;
-            background: rgba(255,255,255,0.1);
-            position: relative;
+      }
+      .hero-title {
+        font-family: var(--font-heading);
+        font-size: 4.5rem;
+        line-height: 0.85;
+        font-weight: 700;
+        color: var(--text-main);
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        margin-bottom: 10px;
+        position: relative;
+      }
+      .glitch-layer {
+        color: var(--accent);
+        text-shadow: 0 0 20px rgba(255, 30, 30, 0.8);
+        display: inline-block;
+      }
+      .hero-line {
+        width: 60px;
+        height: 4px;
+        background: var(--accent);
+        margin-bottom: 25px;
+        box-shadow: 0 0 10px var(--accent);
+        animation: pulseGlow 2s infinite alternate;
+      }
+
+      @keyframes pulseGlow {
+        0% {
+          box-shadow: 0 0 10px var(--accent);
         }
-        .loading-fill {
-            position: absolute;
-            top: 0; left: 0; bottom: 0;
-            width: 0%;
-            background: var(--accent);
-            box-shadow: 0 0 10px var(--accent);
-            transition: width 0.1s linear;
+        100% {
+          box-shadow:
+            0 0 30px var(--accent),
+            0 0 50px var(--accent);
         }
-        .loading-text {
-            margin-top: 15px;
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            color: var(--text-dim);
-            letter-spacing: 0.1em;
+      }
+      @keyframes float {
+        0% {
+          transform: translateY(0px);
         }
+        50% {
+          transform: translateY(-10px);
+        }
+        100% {
+          transform: translateY(0px);
+        }
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        max-width: 400px;
+      }
+
+      .btn-primary {
+        position: relative;
+        background: var(--accent);
+        color: #fff;
+        padding: 20px 40px;
+        font-family: var(--font-heading);
+        font-size: 2rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        text-decoration: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transform: skewX(-10deg);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 20px rgba(255, 30, 30, 0.4);
+        border: none;
+        cursor: pointer;
+      }
+      .btn-primary .btn-text,
+      .btn-primary .btn-arrow {
+        transform: skewX(10deg);
+        position: relative;
+        z-index: 2;
+      }
+      .btn-primary .btn-arrow {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        transition: transform 0.3s ease;
+      }
+      .btn-primary:hover {
+        box-shadow: 0 0 40px rgba(255, 30, 30, 0.8);
+        background: #fff;
+        color: var(--accent);
+        transform: skewX(-10deg) scale(1.05);
+      }
+      .btn-primary:hover .btn-arrow {
+        transform: skewX(10deg) translateX(10px);
+      }
+      .btn-scanline {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.3) 2px,
+          rgba(0, 0, 0, 0.3) 4px
+        );
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      .btn-secondary-outline {
+        background: transparent;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        color: var(--text-main);
+        padding: 15px 30px;
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        cursor: pointer;
+        transform: skewX(-10deg);
+        transition: all 0.3s ease;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .btn-secondary-outline .btn-text {
+        transform: skewX(10deg);
+        display: block;
+      }
+      .btn-secondary-outline:hover {
+        border-color: var(--text-main);
+        background: rgba(255, 255, 255, 0.05);
+        transform: skewX(-10deg) scale(1.05);
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+      }
+
+      .telemetry-dashboard {
+        background: var(--panel-bg);
+        border: 1px solid rgba(255, 30, 30, 0.3);
+        backdrop-filter: blur(10px);
+        padding: 40px;
+        width: 450px;
+        position: relative;
+        box-shadow: inset 0 0 20px rgba(255, 30, 30, 0.05);
+      }
+      .telemetry-dashboard::before {
+        content: "";
+        position: absolute;
+        top: -1px;
+        left: -1px;
+        width: 20px;
+        height: 20px;
+        border-top: 2px solid var(--accent);
+        border-left: 2px solid var(--accent);
+      }
+      .telemetry-dashboard::after {
+        content: "";
+        position: absolute;
+        bottom: -1px;
+        right: -1px;
+        width: 20px;
+        height: 20px;
+        border-bottom: 2px solid var(--accent);
+        border-right: 2px solid var(--accent);
+      }
+      .dash-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+        color: var(--accent);
+        margin-bottom: 30px;
+        letter-spacing: 0.1em;
+      }
+      .dash-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--accent);
+        border-radius: 50%;
+        animation: blink 1s infinite;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+
+      /* Game HUD specific overrides */
+      .setting-group {
+        margin-bottom: 15px;
+      }
+      .dash-label {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--text-dim);
+        margin-bottom: 5px;
+        display: block;
+        letter-spacing: 0.1em;
+      }
+      .custom-select {
+        width: 100%;
+        height: 40px;
+        border: 2px solid var(--border);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-main);
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        padding: 0 10px;
+        outline: none;
+        cursor: pointer;
+        transition: border-color 0.3s ease;
+      }
+      .custom-select:hover,
+      .custom-select:focus {
+        border-color: var(--accent);
+      }
+      .custom-select option {
+        background: #050507;
+        color: #fff;
+      }
+
+      .color-picker-input {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 40px;
+        background-color: transparent;
+        border: 2px solid var(--border);
+        border-radius: 0;
+        padding: 0;
+        cursor: pointer;
+        transition: border-color 0.3s ease;
+        box-sizing: border-box;
+      }
+      .color-picker-input::-webkit-color-swatch-wrapper {
+        padding: 0;
+      }
+      .color-picker-input::-webkit-color-swatch {
+        border: none;
+        border-radius: 0;
+      }
+      .color-picker-input:hover {
+        border-color: var(--accent);
+      }
+
+      .hud-overlay {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 100;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .hud-top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+      .hud-bottom-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+      }
+
+      .hud-timing-board {
+        background: var(--panel-bg);
+        border-right: 2px solid var(--accent);
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        width: 250px;
+      }
+      .hud-timing-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .hud-timing-label {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--text-dim);
+        letter-spacing: 0.1em;
+      }
+      .hud-timing-val {
+        font-family: var(--font-heading);
+        font-size: 2.5rem;
+        line-height: 1;
+        color: var(--text-main);
+        font-variant-numeric: tabular-nums;
+      }
+      .hud-timing-sub {
+        font-size: 1.5rem;
+        color: var(--text-dim);
+      }
+      .time-row-accent .hud-timing-val {
+        color: var(--accent);
+      }
+
+      .hud-dash-container {
+        background: var(--panel-bg);
+        border-left: 2px solid var(--accent);
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        width: 350px;
+      }
+      .hud-speed-cluster {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+      }
+      .hud-gear-box {
+        text-align: left;
+      }
+      .hud-gear-val {
+        font-family: var(--font-heading);
+        font-size: 4rem;
+        line-height: 0.8;
+        color: var(--accent);
+        display: block;
+      }
+      .hud-speed-box {
+        text-align: right;
+      }
+      .hud-speed-val-wrap {
+        display: flex;
+        align-items: baseline;
+        gap: 5px;
+        justify-content: flex-end;
+      }
+      .hud-speed-val {
+        font-family: var(--font-heading);
+        font-size: 4rem;
+        line-height: 0.8;
+        color: var(--text-main);
+        font-variant-numeric: tabular-nums;
+      }
+      .hud-speed-unit {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        color: var(--text-dim);
+      }
+
+      .hud-rev-container {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+        transform: skewX(-15deg);
+      }
+      .hud-rev-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        background: var(--accent);
+        width: 0%;
+        box-shadow: 0 0 10px var(--accent);
+        transition: width 0.1s linear;
+      }
+
+      .hud-nitro-container {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .hud-nitro-bg {
+        height: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+        transform: skewX(-15deg);
+      }
+      .hud-nitro-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        background: #ffffff;
+        width: 0%;
+        box-shadow: 0 0 10px #ffffff;
+        transition: width 0.1s linear;
+      }
+
+      .hud-tire-wear {
+        background: var(--panel-bg);
+        padding: 15px 20px;
+        backdrop-filter: blur(10px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        border-top: 2px solid var(--accent);
+      }
+      .tire-icons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .tire-icon {
+        width: 15px;
+        height: 30px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.5);
+        transition: background 0.2s ease;
+      }
+
+      .hud-drift-score {
+        background: var(--panel-bg);
+        padding: 15px 25px;
+        backdrop-filter: blur(10px);
+        border-bottom: 2px solid var(--accent);
+        text-align: center;
+      }
+      .hud-drift-val {
+        font-family: var(--font-heading);
+        font-size: 3rem;
+        line-height: 1;
+        color: var(--accent);
+        text-shadow: 0 0 15px rgba(255, 30, 30, 0.5);
+      }
+
+      .drift-popup {
+        position: absolute;
+        top: 20%;
+        left: 50%;
+        transform: translate(-50%, 0);
+        font-family: var(--font-heading);
+        font-size: 4rem;
+        color: var(--text-main);
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+        pointer-events: none;
+        z-index: 500;
+        font-style: italic;
+      }
+
+      .menu-controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 30px;
+      }
+      .ctrl {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .ctrl kbd {
+        background: rgba(255, 30, 30, 0.1);
+        padding: 4px 10px;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--text-main);
+        border: 1px solid rgba(255, 30, 30, 0.3);
+        border-radius: 2px;
+        min-width: 45px;
+        text-align: center;
+      }
+      .ctrl span {
+        font-family: var(--font-body);
+        font-size: 0.9rem;
+        color: var(--text-dim);
+      }
+
+      .result-row {
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--font-mono);
+        font-size: 1rem;
+        color: var(--text-main);
+        padding: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .player-row {
+        background: rgba(255, 30, 30, 0.1);
+        border-left: 2px solid var(--accent);
+        color: var(--accent);
+      }
+
+      .start-text {
+        position: absolute;
+        top: 15%;
+        left: 50%;
+        transform: translate(-50%, 0);
+        font-family: var(--font-heading);
+        font-size: 3rem;
+        color: var(--text-main);
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+        pointer-events: none;
+        z-index: 500;
+        font-style: italic;
+        letter-spacing: 0.1em;
+      }
+      .go-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-family: var(--font-heading);
+        font-size: 8rem;
+        color: var(--accent);
+        text-shadow: 0 0 30px rgba(255, 30, 30, 0.8);
+        pointer-events: none;
+        z-index: 500;
+        font-style: italic;
+        font-weight: bold;
+      }
+
+      .light.red-on {
+        background: #ff0000 !important;
+        box-shadow: 0 0 30px #ff0000;
+      }
+      .light.yellow-on {
+        background: #ffff00 !important;
+        box-shadow: 0 0 30px #ffff00;
+      }
+      .light.green-on {
+        background: #00ff00 !important;
+        box-shadow: 0 0 30px #00ff00;
+      }
+
+      /* Atmospheric overlays */
+      .vignette {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(
+          circle at center,
+          transparent 30%,
+          rgba(5, 5, 7, 0.7) 100%
+        );
+        z-index: 10;
+      }
+
+      /* Modal & HUD Animations */
+      @keyframes slideUpFade {
+        0% {
+          transform: translateY(30px);
+          opacity: 0;
+        }
+        100% {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      .modal-animate {
+        animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      .hud-overlay {
+        animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      @keyframes slideInRight {
+        0% {
+          transform: translateX(50px);
+          opacity: 0;
+        }
+        100% {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      .slide-in-right {
+        animation: slideInRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      @keyframes pulseWarning {
+        0% {
+          box-shadow: 0 0 10px var(--accent);
+        }
+        50% {
+          box-shadow:
+            0 0 30px var(--accent),
+            0 0 50px var(--accent);
+        }
+        100% {
+          box-shadow: 0 0 10px var(--accent);
+        }
+      }
+      .hud-nitro-bg.warning {
+        animation: pulseWarning 0.5s infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
     </style>
-</head>
-<body>
+  </head>
 
-    <!-- Loading Screen -->
-    <div id="loadingScreen">
+  <body>
+    <div
+      id="landingScreenMainWrapper"
+      style="
+        position: absolute;
+        inset: 0;
+        z-index: 200;
+        background-color: #050507;
+      "
+    >
+      <!-- Loading Screen -->
+      <div id="landingScreenMain">
         <div class="loading-title">NITRO RACER</div>
         <div class="loading-bar">
-            <div class="loading-fill" id="loadingFill"></div>
+          <div class="loading-fill" id="loadingFill"></div>
         </div>
-        <div class="loading-text" id="loadingText">INITIALIZING TELEMETRY...</div>
-    </div>
+        <div class="loading-text" id="loadingText">
+          INITIALIZING TELEMETRY...
+        </div>
+      </div>
 
-    <!-- Animated Background -->
-    <div class="animated-bg">
+      <canvas id="particleCanvas"></canvas>
+
+      <!-- Animated Background -->
+      <div class="animated-bg">
         <div class="bg-grid"></div>
         <div class="bg-glow"></div>
         <div class="bg-vignette"></div>
-    </div>
+      </div>
 
-    <!-- Split Screen Layout -->
-    <div class="hero-split">
+      <!-- 3D Car Canvas Container (Full Screen Overlay) -->
+      <div id="carPreviewContainer" style="position: absolute; inset: 0; z-index: 6; pointer-events: none;"></div>
+
+      <!-- Split Screen Layout -->
+      <div class="hero-split">
         <!-- Left: Branding & CTA -->
         <div class="hero-left">
-            <div class="hero-branding">
-                <h1 class="hero-title">
-                    <span class="glitch-layer">NITRO RACER</span>
-                    <br>SIMULATOR
-                </h1>
-                <div class="hero-line"></div>
-                <p class="hero-desc">Experience sim-grade physics and high-octane drift mechanics in your browser. Master the track.</p>
-            </div>
-            
-            <div class="hero-actions">
-                <a href="#" onclick="transitionToGame(event)" class="btn-primary">
-                    <div class="btn-scanline"></div>
-                    <span class="btn-text">DRIVE NOW</span>
-                    <span class="btn-arrow">&gt;&gt;</span>
-                </a>
-                <button class="btn-secondary-outline" onclick="document.getElementById('infoModal').classList.add('active')">
-                    <span class="btn-text">CONTROLS & INFO</span>
-                </button>
-            </div>
+          <div class="hero-branding">
+            <div class="hero-eyebrow">F1 · BROWSER RACING · 2025</div>
+            <h1 class="hero-title">
+              <span class="glitch-layer">NITRO RACER</span>
+              <span class="title-sub">SIMULATOR</span>
+            </h1>
+            <div class="hero-stripe"></div>
+            <p class="hero-desc">
+              Experience sim-grade physics and high-octane drift mechanics in
+              your browser. Master the track.
+            </p>
+          </div>
+
+          <div class="hero-actions">
+            <a href="#" onclick="transitionToGame(event)" class="btn-primary">
+              <div class="btn-scanline"></div>
+              <span class="btn-text">DRIVE NOW</span>
+              <span class="btn-arrow">&gt;&gt;</span>
+            </a>
+            <button
+              class="btn-secondary-outline"
+              onclick="
+                document.getElementById('infoModal').classList.add('active')
+              "
+            >
+              <span class="btn-text">CONTROLS &amp; INFO</span>
+            </button>
+          </div>
         </div>
 
         <!-- Right: Telemetry Dashboard -->
         <div class="hero-right">
-            <div class="telemetry-dashboard">
-                <div class="dash-header">
-                    <div class="dash-dot"></div>
-                    <span>LIVE TELEMETRY</span>
-                </div>
-                
-                <div class="dash-grid">
-                    <div class="dash-card">
-                        <span class="dash-label">POWER</span>
-                        <div class="dash-value-wrap">
-                            <span class="dash-value dash-counter" data-target="840" data-decimals="0">0</span>
-                            <span class="dash-unit">BHP</span>
-                        </div>
-                        <div class="dash-bar"><div class="dash-fill" data-width="85%"></div></div>
-                    </div>
-                    
-                    <div class="dash-card">
-                        <span class="dash-label">0-100 KM/H</span>
-                        <div class="dash-value-wrap">
-                            <span class="dash-value dash-counter" data-target="2.8" data-decimals="1">0.0</span>
-                            <span class="dash-unit">SEC</span>
-                        </div>
-                        <div class="dash-bar"><div class="dash-fill" data-width="95%"></div></div>
-                    </div>
-                    
-                    <div class="dash-card">
-                        <span class="dash-label">TOP SPEED</span>
-                        <div class="dash-value-wrap">
-                            <span class="dash-value dash-counter" data-target="340" data-decimals="0">0</span>
-                            <span class="dash-unit">KM/H</span>
-                        </div>
-                        <div class="dash-bar"><div class="dash-fill" data-width="78%"></div></div>
-                    </div>
-                </div>
+          <div class="telemetry-dashboard">
+            <div class="dash-corner"></div>
+            <div class="dash-header">
+              <div class="dash-dot"></div>
+              <span>LIVE TELEMETRY</span>
             </div>
-        </div>
-    </div>
 
-    <!-- Info Modal -->
-    <div id="infoModal">
+            <div class="dash-grid">
+              <div class="dash-card">
+                <span class="dash-label">POWER</span>
+                <div class="dash-value-wrap">
+                  <span
+                    class="dash-value dash-counter"
+                    data-target="840"
+                    data-decimals="0"
+                    >0</span
+                  >
+                  <span class="dash-unit">BHP</span>
+                </div>
+                <div class="dash-bar">
+                  <div class="dash-fill" data-width="85%"></div>
+                </div>
+              </div>
+
+              <div class="dash-card">
+                <span class="dash-label">0-100 KM/H</span>
+                <div class="dash-value-wrap">
+                  <span
+                    class="dash-value dash-counter"
+                    data-target="2.8"
+                    data-decimals="1"
+                    >0.0</span
+                  >
+                  <span class="dash-unit">SEC</span>
+                </div>
+                <div class="dash-bar">
+                  <div class="dash-fill" data-width="95%"></div>
+                </div>
+              </div>
+
+              <div class="dash-card">
+                <span class="dash-label">TOP SPEED</span>
+                <div class="dash-value-wrap">
+                  <span
+                    class="dash-value dash-counter"
+                    data-target="340"
+                    data-decimals="0"
+                    >0</span
+                  >
+                  <span class="dash-unit">KM/H</span>
+                </div>
+                <div class="dash-bar">
+                  <div class="dash-fill" data-width="78%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Modal -->
+      <div id="infoModal">
         <div class="modal-content">
-            <button class="close-btn" onclick="document.getElementById('infoModal').classList.remove('active')">&times;</button>
-            <div class="modal-grid">
-                <div class="modal-col">
-                    <h3>Controls</h3>
-                    <ul class="modal-list">
-                        <li><kbd>W / &uarr;</kbd> <span>Throttle</span></li>
-                        <li><kbd>S / &darr;</kbd> <span>Brake</span></li>
-                        <li><kbd>A / D</kbd> <span>Steering Input</span></li>
-                        <li><kbd>Space</kbd> <span>Handbrake (Drift)</span></li>
-                        <li><kbd>Shift</kbd> <span>Nitro Injection</span></li>
-                        <li><kbd>C</kbd> <span>Camera View</span></li>
-                    </ul>
-                </div>
-                <div class="modal-col">
-                    <h3>Features</h3>
-                    <ul class="modal-list">
-                        <li><kbd>AI</kbd> <span>3 Dynamic AI Rivals with distinct styles.</span></li>
-                        <li><kbd>DRFT</kbd> <span>Drift to build up nitro pressure.</span></li>
-                        <li><kbd>WTHR</kbd> <span>Rain mode toggles grip simulation.</span></li>
-                        <li><kbd>VFX</kbd> <span>ACES Filmic Tone Mapping & Bloom.</span></li>
-                    </ul>
-                </div>
+          <button
+            class="close-btn"
+            onclick="
+              document.getElementById('infoModal').classList.remove('active')
+            "
+          >
+            &times;
+          </button>
+          <div class="modal-grid">
+            <div class="modal-col">
+              <h3>Controls</h3>
+              <ul class="modal-list">
+                <li><kbd>W / &uarr;</kbd> <span>Throttle</span></li>
+                <li><kbd>S / &darr;</kbd> <span>Brake</span></li>
+                <li><kbd>A / D</kbd> <span>Steering Input</span></li>
+                <li><kbd>Space</kbd> <span>Handbrake (Drift)</span></li>
+                <li><kbd>Shift</kbd> <span>Nitro Injection</span></li>
+                <li><kbd>C</kbd> <span>Camera View</span></li>
+              </ul>
             </div>
+            <div class="modal-col">
+              <h3>Features</h3>
+              <ul class="modal-list">
+                <li>
+                  <kbd>AI</kbd>
+                  <span>3 Dynamic AI Rivals with distinct styles.</span>
+                </li>
+                <li>
+                  <kbd>DRFT</kbd> <span>Drift to build up nitro pressure.</span>
+                </li>
+                <li>
+                  <kbd>WTHR</kbd>
+                  <span>Rain mode toggles grip simulation.</span>
+                </li>
+                <li>
+                  <kbd>VFX</kbd> <span>ACES Filmic Tone Mapping & Bloom.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
-    </div>
+      </div>
 
-    <script>
+      <script>
+        // ─── PARTICLE SYSTEM ──────────────────────────────────────────
+        (function() {
+          const canvas = document.getElementById('particleCanvas');
+          if (!canvas) return;
+          const ctx = canvas.getContext('2d');
+          let W, H, particles = [];
+
+          function resize() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+          }
+          resize();
+          window.addEventListener('resize', resize);
+
+          function rand(a, b) { return a + Math.random() * (b - a); }
+
+          function createParticle() {
+            return {
+              x: W + rand(10, 100), // spawn offscreen right
+              y: rand(0, H),
+              vx: rand(-12, -4),     // fly left at high speed
+              vy: rand(-0.2, 0.2),   // slight vertical float
+              size: rand(1.5, 4),
+              alpha: rand(0.3, 0.9),
+              decay: rand(0.005, 0.015),
+              color: Math.random() > 0.6 ? `rgba(232,0,13,` : Math.random() > 0.4 ? `rgba(255,255,255,` : `rgba(180,0,10,`
+            };
+          }
+
+          for (let i = 0; i < 120; i++) {
+            const p = createParticle();
+            p.x = rand(0, W); // distribute initially
+            particles.push(p);
+          }
+
+          function animParticles() {
+            ctx.clearRect(0, 0, W, H);
+            for (let i = particles.length - 1; i >= 0; i--) {
+              const p = particles[i];
+              p.x += p.vx;
+              p.y += p.vy;
+              p.alpha -= p.decay;
+              if (p.alpha <= 0 || p.x < -20) {
+                particles[i] = createParticle();
+                continue;
+              }
+              // draw particle as a small line (streak) to look like speed trail!
+              ctx.beginPath();
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(p.x - p.vx * 1.5, p.y); // streak length proportional to speed
+              ctx.strokeStyle = p.color + p.alpha + ')';
+              ctx.lineWidth = p.size;
+              ctx.stroke();
+            }
+            requestAnimationFrame(animParticles);
+          }
+          animParticles();
+        })();
+
         // Techy Loading Screen
         const texts = [
-            "INITIALIZING TELEMETRY...",
-            "LOADING TRACK DATA...",
-            "CALIBRATING SUSPENSION...",
-            "WARMING UP TIRES...",
-            "SYSTEM READY."
+          "INITIALIZING TELEMETRY...",
+          "LOADING TRACK DATA...",
+          "CALIBRATING SUSPENSION...",
+          "WARMING UP TIRES...",
+          "SYSTEM READY.",
         ];
-        
+
         let progress = 0;
         let textIdx = 0;
-        const bar = document.getElementById('loadingFill');
-        const txt = document.getElementById('loadingText');
-        const screen = document.getElementById('loadingScreen');
+        const bar = document.getElementById("loadingFill");
+        const txt = document.getElementById("loadingText");
+        const screen = document.getElementById("landingScreenMain");
 
         function loadLoop() {
-            progress += Math.random() * 15 + 5;
-            if (progress > 100) progress = 100;
-            
-            bar.style.width = progress + '%';
-            
-            let targetIdx = Math.floor((progress / 100) * (texts.length - 1));
-            if (targetIdx !== textIdx) {
-                textIdx = targetIdx;
-                txt.textContent = texts[textIdx];
-            }
+          progress += Math.random() * 15 + 5;
+          if (progress > 100) progress = 100;
 
-            if (progress < 100) {
-                setTimeout(loadLoop, Math.random() * 150 + 50);
-            } else {
-                txt.textContent = texts[texts.length - 1];
-                setTimeout(() => {
-                    screen.classList.add('fade-out');
-                    setTimeout(() => {
-                        screen.remove();
-                        initDashboard();
-                    }, 800);
-                }, 500);
-            }
+          bar.style.width = progress + "%";
+
+          let targetIdx = Math.floor((progress / 100) * (texts.length - 1));
+          if (targetIdx !== textIdx) {
+            textIdx = targetIdx;
+            txt.textContent = texts[textIdx];
+          }
+
+          if (progress < 100) {
+            setTimeout(loadLoop, Math.random() * 150 + 50);
+          } else {
+            txt.textContent = texts[texts.length - 1];
+            setTimeout(() => {
+              screen.classList.add("fade-out");
+              setTimeout(() => {
+                screen.remove();
+                initDashboard();
+                window.carIntroRequested = true;
+                if (window.startCarIntro) {
+                  window.startCarIntro();
+                }
+              }, 800);
+            }, 500);
+          }
         }
 
         window.onload = () => {
-            setTimeout(loadLoop, 300);
+          setTimeout(loadLoop, 300);
         };
 
         // Number animation for Dashboard
         function initDashboard() {
-            // Animate progress bars
-            document.querySelectorAll('.dash-fill').forEach(fill => {
-                fill.style.width = fill.getAttribute('data-width');
-            });
+          // Animate progress bars
+          document.querySelectorAll(".dash-fill").forEach((fill) => {
+            fill.style.width = fill.getAttribute("data-width");
+          });
 
-            // Animate counters
-            document.querySelectorAll('.dash-counter').forEach(counter => {
-                const target = parseFloat(counter.getAttribute('data-target'));
-                const decimals = parseInt(counter.getAttribute('data-decimals'));
-                const duration = 1500; // ms
-                const start = performance.now();
+          // Animate counters
+          document.querySelectorAll(".dash-counter").forEach((counter) => {
+            const target = parseFloat(counter.getAttribute("data-target"));
+            const decimals = parseInt(counter.getAttribute("data-decimals"));
+            const duration = 1500; // ms
+            const start = performance.now();
 
-                function updateCounter(currentTime) {
-                    const elapsed = currentTime - start;
-                    const progress = Math.min(elapsed / duration, 1);
-                    
-                    // easeOutQuart
-                    const ease = 1 - Math.pow(1 - progress, 4);
-                    
-                    const current = (target * ease).toFixed(decimals);
-                    counter.textContent = current;
+            function updateCounter(currentTime) {
+              const elapsed = currentTime - start;
+              const progress = Math.min(elapsed / duration, 1);
 
-                    if (progress < 1) {
-                        requestAnimationFrame(updateCounter);
-                    }
-                }
+              // easeOutQuart
+              const ease = 1 - Math.pow(1 - progress, 4);
+
+              const current = (target * ease).toFixed(decimals);
+              counter.textContent = current;
+
+              if (progress < 1) {
                 requestAnimationFrame(updateCounter);
-            });
+              }
+            }
+            requestAnimationFrame(updateCounter);
+          });
         }
 
+        let isNavigating = false;
+
         function transitionToGame(e) {
-            e.preventDefault();
-            const overlay = document.createElement('div');
-            overlay.style.position = 'fixed';
-            overlay.style.inset = '0';
-            overlay.style.backgroundColor = 'var(--accent)';
-            overlay.style.clipPath = 'polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)';
-            overlay.style.transition = 'clip-path 0.5s cubic-bezier(0.86, 0, 0.07, 1)';
-            overlay.style.zIndex = '9999';
-            
-            const text = document.createElement('div');
-            text.textContent = 'INITIALIZING SYSTEM...';
-            text.style.position = 'absolute';
-            text.style.top = '50%'; text.style.left = '50%';
-            text.style.transform = 'translate(-50%, -50%)';
-            text.style.fontFamily = 'var(--font-heading)';
-            text.style.fontSize = '4rem';
-            text.style.color = '#fff';
+          if (e) e.preventDefault();
+          if (isNavigating) return;
+          isNavigating = true;
+
+          let transitionExecuted = false;
+
+          const triggerPageTransition = () => {
+            if (transitionExecuted) return;
+            transitionExecuted = true;
+
+            const overlay = document.createElement("div");
+            overlay.style.position = "fixed";
+            overlay.style.inset = "0";
+            overlay.style.backgroundColor = "var(--accent)";
+            overlay.style.transform = "translateX(-100%)";
+            overlay.style.zIndex = "9999";
+            overlay.style.pointerEvents = "none";
+            overlay.style.display = "flex";
+            overlay.style.alignItems = "center";
+            overlay.style.justifyContent = "center";
+
+            const text = document.createElement("div");
+            text.textContent = "INITIALIZING SYSTEM...";
+            text.style.fontFamily = "var(--font-heading)";
+            text.style.fontSize = "3.5rem";
+            text.style.color = "#fff";
+            text.style.letterSpacing = "4px";
             overlay.appendChild(text);
 
             document.body.appendChild(overlay);
-            
-            overlay.offsetHeight; // trigger reflow
-            overlay.style.clipPath = 'polygon(0 0, 100% 0, 100% 100%, 0% 100%)';
-            
+
+            const completeSwitch = () => {
+              const landing = document.getElementById("landingScreenMainWrapper");
+              const menu = document.getElementById("mainMenu");
+              if (landing) landing.style.display = "none";
+              if (menu) menu.classList.add("anim-slide-up");
+
+              if (window.gsap) {
+                gsap.to(overlay, {
+                  xPercent: 100,
+                  duration: 0.5,
+                  ease: "power4.inOut",
+                  onComplete: () => {
+                    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                    isNavigating = false;
+                  }
+                });
+              } else {
+                overlay.style.transition = "transform 0.5s cubic-bezier(0.86, 0, 0.07, 1)";
+                overlay.style.transform = "translateX(100%)";
+                setTimeout(() => {
+                  if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                  isNavigating = false;
+                }, 520);
+              }
+            };
+
+            if (window.gsap) {
+              gsap.to(overlay, {
+                xPercent: 0,
+                duration: 0.5,
+                ease: "power4.inOut",
+                onComplete: () => completeSwitch()
+              });
+            } else {
+              overlay.style.transition = "transform 0.5s cubic-bezier(0.86, 0, 0.07, 1)";
+              overlay.offsetHeight;
+              overlay.style.transform = "translateX(0%)";
+              setTimeout(completeSwitch, 520);
+            }
+
             setTimeout(() => {
-                window.location.href = 'game.html';
-            }, 600);
+              if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+              isNavigating = false;
+            }, 1800);
+          };
+
+          // Guaranteed failsafe timer (1100ms)
+          const failsafeTimer = setTimeout(() => {
+            triggerPageTransition();
+          }, 1100);
+
+          if (window.launchCarPreview) {
+            window.launchCarPreview(() => {
+              clearTimeout(failsafeTimer);
+              triggerPageTransition();
+            });
+          } else {
+            clearTimeout(failsafeTimer);
+            triggerPageTransition();
+          }
         }
 
         // Play BGM on first interaction
         let bgmPlayed = false;
         const playBgm = () => {
-            if (!bgmPlayed) {
-                const bgm = document.getElementById('bgm');
-                if (bgm) {
-                    bgm.volume = 0.3;
-                    const savedTime = sessionStorage.getItem('bgmTime');
-                    if (savedTime) {
-                        bgm.currentTime = parseFloat(savedTime);
-                    }
-                    const playPromise = bgm.play();
-                    if (playPromise !== undefined) {
-                        playPromise.then(_ => {
-                            bgmPlayed = true;
-                        }).catch(e => {
-                            // Autoplay was prevented. Wait for next interaction.
-                        });
-                    }
-                }
+          if (!bgmPlayed) {
+            const bgm = document.getElementById("bgm");
+            if (bgm) {
+              bgm.volume = 0.3;
+              const savedTime = sessionStorage.getItem("bgmTime");
+              if (savedTime) {
+                bgm.currentTime = parseFloat(savedTime);
+              }
+              const playPromise = bgm.play();
+              if (playPromise !== undefined) {
+                playPromise
+                  .then((_) => {
+                    bgmPlayed = true;
+                  })
+                  .catch((e) => {
+                    // Autoplay was prevented. Wait for next interaction.
+                  });
+              }
             }
+          }
         };
 
-        window.addEventListener('beforeunload', () => {
-            const bgm = document.getElementById('bgm');
-            if (bgm) {
-                sessionStorage.setItem('bgmTime', bgm.currentTime);
-            }
+        window.addEventListener("beforeunload", () => {
+          const bgm = document.getElementById("bgm");
+          if (bgm) {
+            sessionStorage.setItem("bgmTime", bgm.currentTime);
+          }
         });
-        ['click', 'pointerdown', 'touchstart', 'keydown', 'mousemove'].forEach(evt => {
+        ["click", "pointerdown", "touchstart", "keydown", "mousemove"].forEach(
+          (evt) => {
             document.addEventListener(evt, playBgm);
-        });
+          },
+        );
+      </script>
+    </div>
+
+    <!-- GAME CONTAINER  -->
+    <div id="gameContainer">
+      <canvas id="c"></canvas>
+
+      <!-- CINEMATIC OVERLAYS -->
+      <div id="letterboxTop" class="letterbox letterbox-top"></div>
+      <div id="letterboxBottom" class="letterbox letterbox-bottom"></div>
+      <div id="vignette" class="vignette"></div>
+
+      <!-- PRE-GAME MENU -->
+      <div
+        id="mainMenu"
+        class="hero-split"
+        style="position: absolute; inset: 0; z-index: 100"
+      >
+        <div
+          class="menu-backdrop"
+          style="
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(
+              to right,
+              rgba(5, 5, 7, 1) 0%,
+              rgba(5, 5, 7, 0.9) 30%,
+              transparent 65%
+            );
+            z-index: -2;
+            pointer-events: none;
+          "
+        >
+          <div
+            class="btn-scanline"
+            style="opacity: 0.15; pointer-events: none"
+          ></div>
+        </div>
+
+        <div
+          class="hero-left"
+          style="
+            padding-left: 5vw;
+            animation: slideInLeft 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          "
+        >
+          <div
+            class="hero-branding"
+            style="animation: float 6s ease-in-out infinite"
+          >
+            <h1 class="hero-title">
+              <span class="glitch-layer">CAR SETUP</span>
+            </h1>
+            <div class="hero-line"></div>
+          </div>
+
+          <div
+            class="menu-settings"
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 15px;
+              margin-bottom: 30px;
+              max-width: 400px;
+            "
+          >
+            <div class="setting-group">
+              <label class="dash-label">CAR COLOR</label>
+              <input
+                type="color"
+                id="carColor"
+                value="#ff1e1e"
+                class="color-picker-input"
+                onchange="updatePlayerColor(this.value)"
+              />
+            </div>
+            <div class="setting-group">
+              <label class="dash-label">WEATHER</label>
+              <select
+                id="weatherSelect"
+                onchange="toggleWeather(this.value)"
+                class="custom-select"
+              >
+                <option value="summer">☀️ SUMMER</option>
+                <option value="rain">🌧️ RAIN STORM</option>
+                <option value="snow">❄️ SNOW</option>
+                <option value="night">🌙 NIGHT</option>
+              </select>
+            </div>
+            <div class="setting-group">
+              <label class="dash-label">DIFFICULTY</label>
+              <select
+                id="difficultySelect"
+                onchange="setDifficulty(this.value)"
+                class="custom-select"
+              >
+                <option value="easy">ROOKIE</option>
+                <option value="medium" selected>PRO</option>
+                <option value="hard">VETERAN</option>
+              </select>
+            </div>
+            <div
+              class="setting-group"
+              id="bestTimesRow"
+              style="display: flex; gap: 10px"
+            >
+              <span
+                class="best-time-chip"
+                id="best_summer"
+                style="
+                  display: none;
+                  font-family: var(--font-mono);
+                  font-size: 0.8rem;
+                  background: var(--accent);
+                  padding: 2px 8px;
+                  border-radius: 2px;
+                "
+              ></span>
+              <span
+                class="best-time-chip"
+                id="best_rain"
+                style="
+                  display: none;
+                  font-family: var(--font-mono);
+                  font-size: 0.8rem;
+                  background: var(--accent);
+                  padding: 2px 8px;
+                  border-radius: 2px;
+                "
+              ></span>
+              <span
+                class="best-time-chip"
+                id="best_snow"
+                style="
+                  display: none;
+                  font-family: var(--font-mono);
+                  font-size: 0.8rem;
+                  background: var(--accent);
+                  padding: 2px 8px;
+                  border-radius: 2px;
+                "
+              ></span>
+              <span
+                class="best-time-chip"
+                id="best_night"
+                style="
+                  display: none;
+                  font-family: var(--font-mono);
+                  font-size: 0.8rem;
+                  background: var(--accent);
+                  padding: 2px 8px;
+                  border-radius: 2px;
+                "
+              ></span>
+            </div>
+          </div>
+
+          <div class="hero-actions">
+            <button id="startBtn" class="btn-primary" onclick="startGame()">
+              <div class="btn-scanline"></div>
+              <span class="btn-text">START ENGINE</span>
+              <span class="btn-arrow">&gt;&gt;</span>
+            </button>
+            <button
+              class="btn-secondary-outline"
+              onclick="window.returnToLandingPreview && window.returnToLandingPreview()"
+            >
+              <span class="btn-text">BACK TO MENU</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="hero-right">
+          <div
+            class="menu-preview-badge"
+            style="
+              position: absolute;
+              bottom: 5vh;
+              right: 5vw;
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              font-family: var(--font-mono);
+              color: var(--accent);
+              letter-spacing: 0.1em;
+            "
+          >
+            <span class="dash-dot"></span>
+            LIVE PREVIEW — YOUR CAR
+          </div>
+        </div>
+      </div>
+
+      <!-- PAUSE OVERLAY -->
+      <div
+        id="pauseMenu"
+        style="
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(5, 5, 7, 0.85);
+          backdrop-filter: blur(15px);
+          z-index: 200;
+          align-items: center;
+          justify-content: center;
+        "
+      >
+        <div class="hero-branding modal-animate" style="text-align: center">
+          <h1 class="hero-title" style="font-size: 5rem">
+            <span class="glitch-layer">RACE PAUSED</span>
+          </h1>
+          <div class="hero-line" style="margin: 0 auto 40px auto"></div>
+
+          <div class="menu-controls" style="text-align: left">
+            <div class="ctrl"><kbd>↑W</kbd><span>Accelerate</span></div>
+            <div class="ctrl"><kbd>↓S</kbd><span>Brake</span></div>
+            <div class="ctrl"><kbd>←→</kbd><span>Steer</span></div>
+            <div class="ctrl"><kbd>Space</kbd><span>Drift</span></div>
+            <div class="ctrl"><kbd>Shift</kbd><span>Nitro</span></div>
+            <div class="ctrl"><kbd>P/Esc</kbd><span>Pause</span></div>
+          </div>
+
+          <div class="hero-actions" style="margin: 0 auto">
+            <button class="btn-primary" onclick="togglePause()">
+              <div class="btn-scanline"></div>
+              <span class="btn-text">RESUME RACE</span>
+            </button>
+            <button class="btn-secondary-outline" onclick="returnToMenu()">
+              <span class="btn-text">QUIT RACE</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESUME COUNTDOWN -->
+      <div id="resumeText" class="countdown-text" style="display: none">3</div>
+
+      <!-- IN-GAME TELEMETRY HUD -->
+      <div id="hud" class="hud-overlay" style="display: none">
+        <div class="hud-top-bar">
+          <div
+            class="hud-corner-btns"
+            style="pointer-events: auto; display: flex; gap: 10px"
+          >
+            <button
+              class="btn-secondary-outline"
+              onclick="toggleFS()"
+              title="Fullscreen"
+              style="padding: 10px; font-family: monospace"
+            >
+              ⛶
+            </button>
+            <button
+              class="btn-secondary-outline"
+              onclick="openSettings()"
+              title="Settings"
+              style="padding: 10px; font-family: monospace"
+            >
+              ⚙️
+            </button>
+          </div>
+
+          <!-- DRIFT SCORE -->
+          <div class="hud-drift-score" id="driftScoreHud">
+            <div class="hud-dash-label">DRIFT SCORE</div>
+            <div class="hud-drift-val" id="driftTotal">0</div>
+          </div>
+
+          <!-- TIMING BOARD -->
+          <div class="hud-timing-board">
+            <div class="hud-timing-row">
+              <span class="hud-timing-label">POS</span>
+              <span class="hud-timing-val" id="pos"
+                >1<span class="hud-timing-sub">/4</span></span
+              >
+            </div>
+            <div class="hud-timing-row">
+              <span class="hud-timing-label">LAP</span>
+              <span class="hud-timing-val" id="lap"
+                >1<span class="hud-timing-sub">/3</span></span
+              >
+            </div>
+            <div class="hud-timing-row time-row-accent">
+              <span class="hud-timing-label">TIME</span>
+              <span class="hud-timing-val" id="time">00:00.0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-bottom-bar">
+          <!-- MINIMAP -->
+          <div class="hud-minimap-container">
+            <canvas
+              id="minimapCanvas"
+              width="200"
+              height="200"
+              style="
+                background: rgba(0, 0, 0, 0.5);
+                border: 2px solid var(--border);
+                border-radius: 50%;
+              "
+            ></canvas>
+          </div>
+
+          <!-- TIRE WEAR -->
+          <div class="hud-tire-wear" id="tireWearHud">
+            <div class="hud-dash-label">TIRE WEAR</div>
+            <div class="tire-icons">
+              <div class="tire-icon" id="tire_fl"></div>
+              <div class="tire-icon" id="tire_fr"></div>
+              <div class="tire-icon" id="tire_rl"></div>
+              <div class="tire-icon" id="tire_rr"></div>
+            </div>
+          </div>
+
+          <!-- DASHBOARD -->
+          <div class="hud-dash-container">
+            <div class="hud-speed-cluster">
+              <div class="hud-gear-box">
+                <span class="hud-dash-label">GEAR</span>
+                <span class="hud-gear-val" id="gearText">1</span>
+              </div>
+              <div class="hud-speed-box">
+                <span class="hud-dash-label">SPEED</span>
+                <div class="hud-speed-val-wrap">
+                  <span class="hud-speed-val" id="speed">0</span>
+                  <span class="hud-speed-unit">KM/H</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="hud-rev-container">
+              <div class="hud-rev-fill" id="revFill"></div>
+            </div>
+
+            <div class="hud-nitro-container">
+              <div class="hud-dash-label">N2O BOOST</div>
+              <div class="hud-nitro-bg">
+                <div id="nitroFill" class="hud-nitro-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating drift popup -->
+        <div class="drift-popup" id="driftPopup" style="display: none"></div>
+      </div>
+
+      <div
+        id="loadingScreen"
+        style="
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(5, 5, 7, 0.98);
+          z-index: 1000;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          overflow: hidden;
+          font-family: var(--font-mono);
+        "
+      >
+        <div class="btn-scanline" style="opacity: 0.2"></div>
+        <div class="vignette"></div>
+
+        <div
+          style="
+            width: 80%;
+            max-width: 900px;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+          "
+        >
+          <!-- TWO COLUMN LAYOUT -->
+          <div style="display: flex; gap: 40px; flex-wrap: wrap">
+            <!-- LEFT: BOOT LOG -->
+            <div
+              style="
+                flex: 1;
+                min-width: 300px;
+                background: rgba(0, 0, 0, 0.6);
+                border: 1px solid rgba(255, 30, 30, 0.3);
+                padding: 20px;
+                box-shadow: inset 0 0 30px rgba(255, 30, 30, 0.1);
+                height: 280px;
+                overflow: hidden;
+                position: relative;
+              "
+            >
+              <div
+                id="bootLog"
+                style="
+                  color: var(--accent);
+                  font-size: 1.1rem;
+                  line-height: 1.8;
+                  text-shadow: 0 0 5px var(--accent);
+                  display: flex;
+                  flex-direction: column;
+                  gap: 5px;
+                "
+              >
+                <!-- JS will populate this -->
+              </div>
+              <div
+                style="
+                  position: absolute;
+                  bottom: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 60px;
+                  background: linear-gradient(
+                    to bottom,
+                    transparent,
+                    rgba(0, 0, 0, 0.9)
+                  );
+                "
+              ></div>
+            </div>
+
+            <!-- RIGHT: CONTROLS GRID -->
+            <div
+              class="modal-animate"
+              style="
+                flex: 1;
+                min-width: 300px;
+                background: rgba(0, 0, 0, 0.6);
+                border: 1px solid rgba(255, 30, 30, 0.3);
+                padding: 25px;
+                box-shadow: inset 0 0 30px rgba(255, 30, 30, 0.1);
+              "
+            >
+              <div
+                style="
+                  color: var(--accent);
+                  font-family: var(--font-heading);
+                  font-size: 2.2rem;
+                  margin-bottom: 20px;
+                  letter-spacing: 0.1em;
+                  border-left: 4px solid var(--accent);
+                  padding-left: 10px;
+                "
+              >
+                PILOT INTERFACE
+              </div>
+
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: auto 1fr;
+                  gap: 18px 25px;
+                  align-items: center;
+                  font-size: 1.1rem;
+                "
+              >
+                <div style="text-align: right">
+                  <kbd
+                    style="
+                      background: var(--accent);
+                      color: #fff;
+                      padding: 6px 12px;
+                      font-weight: bold;
+                      border-radius: 2px;
+                    "
+                    >W / &uarr;</kbd
+                  >
+                </div>
+                <div style="color: #ddd; letter-spacing: 0.1em">THROTTLE</div>
+
+                <div style="text-align: right">
+                  <kbd
+                    style="
+                      border: 1px solid var(--accent);
+                      color: var(--accent);
+                      padding: 6px 12px;
+                      font-weight: bold;
+                      border-radius: 2px;
+                    "
+                    >A D / &larr; &rarr;</kbd
+                  >
+                </div>
+                <div style="color: #ddd; letter-spacing: 0.1em">STEERING</div>
+
+                <div style="text-align: right">
+                  <kbd
+                    style="
+                      border: 1px solid var(--accent);
+                      color: var(--accent);
+                      padding: 6px 12px;
+                      font-weight: bold;
+                      border-radius: 2px;
+                    "
+                    >S / &darr;</kbd
+                  >
+                </div>
+                <div style="color: #ddd; letter-spacing: 0.1em">BRAKES</div>
+
+                <div style="text-align: right">
+                  <kbd
+                    style="
+                      border: 1px solid #fff;
+                      color: #fff;
+                      padding: 6px 12px;
+                      font-weight: bold;
+                      border-radius: 2px;
+                    "
+                    >SPACE</kbd
+                  >
+                </div>
+                <div style="color: #ddd; letter-spacing: 0.1em">
+                  HANDBRAKE / DRIFT
+                </div>
+
+                <div style="text-align: right">
+                  <kbd
+                    style="
+                      background: #fff;
+                      color: var(--accent);
+                      padding: 6px 12px;
+                      font-weight: bold;
+                      border-radius: 2px;
+                      box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+                    "
+                    >SHIFT</kbd
+                  >
+                </div>
+                <div
+                  style="
+                    color: #fff;
+                    letter-spacing: 0.1em;
+                    text-shadow: 0 0 8px #fff;
+                  "
+                >
+                  NITROUS INJECTION
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PROGRESS BAR -->
+          <div style="margin-top: 10px">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 10px;
+                font-size: 1.2rem;
+                color: #fff;
+                letter-spacing: 0.1em;
+              "
+            >
+              <span class="glitch-layer">SYNCHRONIZING TELEMETRY...</span>
+              <span
+                id="bootProgressText"
+                style="
+                  color: var(--accent);
+                  font-weight: bold;
+                  font-family: var(--font-heading);
+                  font-size: 2rem;
+                  line-height: 1;
+                "
+                >0%</span
+              >
+            </div>
+            <div
+              style="
+                width: 100%;
+                height: 20px;
+                background: rgba(255, 30, 30, 0.1);
+                border: 2px solid var(--accent);
+              "
+            >
+              <div
+                id="bootProgressBar"
+                style="
+                  width: 0%;
+                  height: 100%;
+                  background: var(--accent);
+                  box-shadow: 0 0 20px var(--accent);
+                  transition: width 0.1s linear;
+                "
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- SETTINGS MODAL -->
+      <div
+        id="settingsModal"
+        style="
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(5, 5, 7, 0.9);
+          z-index: 400;
+          align-items: center;
+          justify-content: center;
+          backdrop-filter: blur(10px);
+        "
+      >
+        <div class="telemetry-dashboard" style="width: 500px">
+          <div class="dash-header" style="justify-content: space-between">
+            <div style="display: flex; align-items: center; gap: 10px">
+              <div class="dash-dot"></div>
+              <span>SETTINGS</span>
+            </div>
+            <button
+              class="btn-secondary-outline"
+              onclick="closeSettings()"
+              style="padding: 5px 15px; font-size: 1rem"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div
+            class="menu-settings"
+            style="display: flex; flex-direction: column; gap: 20px"
+          >
+            <div class="setting-group">
+              <label class="dash-label"
+                >🎵 MUSIC VOLUME:
+                <span id="musicVolVal" style="color: var(--accent)"
+                  >30%</span
+                ></label
+              >
+              <input
+                type="range"
+                id="musicVolume"
+                min="0"
+                max="1"
+                step="0.05"
+                value="0.3"
+                oninput="setMusicVolume(this.value)"
+                style="width: 100%; accent-color: var(--accent)"
+              />
+            </div>
+            <div class="setting-group">
+              <label class="dash-label"
+                >🔊 SFX VOLUME:
+                <span id="sfxVolVal" style="color: var(--accent)"
+                  >80%</span
+                ></label
+              >
+              <input
+                type="range"
+                id="sfxVolume"
+                min="0"
+                max="1"
+                step="0.05"
+                value="0.8"
+                oninput="setSfxVolume(this.value)"
+                style="width: 100%; accent-color: var(--accent)"
+              />
+            </div>
+            <div class="setting-group">
+              <label class="dash-label">📷 DEFAULT CAMERA</label>
+              <select
+                id="defaultCameraSelect"
+                onchange="setDefaultCamera(this.value)"
+                class="custom-select"
+              >
+                <option value="3RD_PERSON">CHASE CAM (3RD PERSON)</option>
+                <option value="1ST_PERSON">COCKPIT (1ST PERSON)</option>
+              </select>
+            </div>
+            <div class="setting-group">
+              <label class="dash-label"
+                >🌀 CAMERA SHAKE:
+                <span id="shakeVal" style="color: var(--accent)"
+                  >100%</span
+                ></label
+              >
+              <input
+                type="range"
+                id="shakeIntensity"
+                min="0"
+                max="2"
+                step="0.1"
+                value="1"
+                oninput="setShakeIntensity(this.value)"
+                style="width: 100%; accent-color: var(--accent)"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- START LIGHTS -->
+      <div id="startText" style="display: none" class="start-text">
+        GET READY TO LOSE YOUR MIND
+      </div>
+      <div id="goText" style="display: none" class="go-text">GO!</div>
+      <div
+        id="startLights"
+        style="
+          display: none;
+          position: fixed;
+          top: 30%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: 500;
+        "
+      >
+        <div
+          class="start-light-panel"
+          style="
+            display: flex;
+            gap: 15px;
+            background: rgba(5, 5, 7, 0.8);
+            padding: 20px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+          "
+        >
+          <div
+            class="light"
+            id="lightRed"
+            style="
+              width: 50px;
+              height: 50px;
+              border-radius: 50%;
+              background: #333;
+              border: 2px solid #555;
+            "
+          ></div>
+          <div
+            class="light"
+            id="lightYellow"
+            style="
+              width: 50px;
+              height: 50px;
+              border-radius: 50%;
+              background: #333;
+              border: 2px solid #555;
+            "
+          ></div>
+          <div
+            class="light"
+            id="lightGreen"
+            style="
+              width: 50px;
+              height: 50px;
+              border-radius: 50%;
+              background: #333;
+              border: 2px solid #555;
+            "
+          ></div>
+        </div>
+      </div>
+
+      <!-- POST-RACE CINEMATIC UI -->
+      <div
+        id="postRaceModal"
+        class="slide-in-right"
+        style="
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: linear-gradient(
+            to left,
+            rgba(5, 5, 7, 0.95) 0%,
+            rgba(5, 5, 7, 0.8) 40%,
+            rgba(5, 5, 7, 0) 70%
+          );
+          z-index: 300;
+          flex-direction: column;
+          justify-content: center;
+          align-items: flex-end;
+          padding: 20px 5vw;
+          overflow-y: auto;
+        "
+      >
+        <!-- Letterboxing -->
+        <div class="letterbox top"></div>
+        <div class="letterbox bottom"></div>
+
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 500px;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+          "
+        >
+          <div
+            class="hero-branding"
+            style="text-align: center; margin-bottom: 20px"
+          >
+            <h1 class="hero-title" style="font-size: clamp(3rem, 8vw, 5rem)">
+              <span class="glitch-layer" id="finalPosText">1ST</span>
+              <br /><span
+                id="victorySubText"
+                style="
+                  font-size: clamp(1.2rem, 3vw, 2rem);
+                  color: var(--text-main);
+                "
+                >PLACE</span
+              >
+            </h1>
+            <div class="hero-line" style="margin: 0 auto"></div>
+          </div>
+
+          <div
+            class="telemetry-dashboard"
+            style="width: 100%; margin-bottom: 20px"
+          >
+            <div class="dash-header">
+              <div class="dash-dot"></div>
+              <span>RACE RESULTS</span>
+            </div>
+
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                font-family: var(--font-mono);
+                font-size: 0.8rem;
+                color: var(--text-dim);
+                border-bottom: 1px solid var(--border);
+                padding-bottom: 10px;
+                margin-bottom: 10px;
+              "
+            >
+              <span>POS</span>
+              <span>DRIVER</span>
+              <span>TIME</span>
+            </div>
+            <div
+              id="scoreboardBody"
+              style="display: flex; flex-direction: column; gap: 5px"
+            >
+              <!-- Rows injected via JS -->
+            </div>
+          </div>
+
+          <!-- Personal best banner (shown via JS) -->
+          <div
+            id="personalBestBanner"
+            class="pb-banner"
+            style="
+              display: none;
+              font-family: var(--font-mono);
+              color: var(--text-main);
+              letter-spacing: 0.1em;
+              margin-bottom: 30px;
+              font-size: 1.5rem;
+              text-shadow: 0 0 10px #ffffff;
+            "
+          >
+            🏆 NEW PERSONAL BEST!
+          </div>
+
+          <div
+            class="hero-actions"
+            style="flex-direction: row; justify-content: center"
+          >
+            <button class="btn-primary" onclick="returnToMenu()">
+              <div class="btn-scanline"></div>
+              <span class="btn-text">CONTINUE</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- THREE.JS + POSTPROCESSING -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="car_preview.js"></script>
+    <script src="game.js"></script>
+
+    <script>
+      window.addEventListener("load", () => {
+        const overlay = document.getElementById("pageTransitionOverlay");
+        if (overlay) {
+          overlay.style.opacity = "0";
+          setTimeout(() => overlay.remove(), 1000);
+        }
+        // Phase 2: populate best times display
+        if (typeof updateBestTimeOnMenu === "function") updateBestTimeOnMenu();
+      });
     </script>
     <audio id="bgm" src="assets/audio/lose_my_mind.webm" loop autoplay></audio>
-</body>
+  </body>
 </html>
