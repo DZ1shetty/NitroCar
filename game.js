@@ -660,11 +660,114 @@ function resize() {
     }
 }
 window.addEventListener('resize', resize);
+// ---- Horizon Track Layouts & Vehicle Classes ----
+const TRACK_LAYOUTS = {
+    grand_prix: {
+        name: "Grand Prix Serpent",
+        width: 420,
+        controlPoints: [
+            new THREE.Vector3( 1400, 0,    0),
+            new THREE.Vector3( 2000, 0,  900),
+            new THREE.Vector3( 1100, 0, 1800),
+            new THREE.Vector3(  200, 0, 1100),
+            new THREE.Vector3( -400, 0, 1900),
+            new THREE.Vector3(-1200, 0, 1300),
+            new THREE.Vector3(-1800, 0,  500),
+            new THREE.Vector3(-1100, 0, -500),
+            new THREE.Vector3(-2000, 0,-1300),
+            new THREE.Vector3(-1100, 0,-2000),
+            new THREE.Vector3(    0, 0,-1300),
+            new THREE.Vector3(  700, 0,-1900),
+            new THREE.Vector3( 1600, 0,-1100)
+        ]
+    },
+    canyon_run: {
+        name: "Canyon Switchbacks",
+        width: 400,
+        controlPoints: [
+            new THREE.Vector3( 1600, 0,    0),
+            new THREE.Vector3( 2300, 0,  700),
+            new THREE.Vector3( 1800, 0, 1700),
+            new THREE.Vector3(  700, 0,  800),
+            new THREE.Vector3( -100, 0, 1800),
+            new THREE.Vector3(-1000, 0,  800),
+            new THREE.Vector3(-2000, 0, 1700),
+            new THREE.Vector3(-2300, 0,  100),
+            new THREE.Vector3(-1400, 0,-1000),
+            new THREE.Vector3(-2100, 0,-1800),
+            new THREE.Vector3( -700, 0,-1100),
+            new THREE.Vector3(  400, 0,-2100),
+            new THREE.Vector3( 1200, 0,-1100)
+        ]
+    },
+    tokyo_drift: {
+        name: "Tokyo Expressway Ring",
+        width: 460,
+        controlPoints: [
+            new THREE.Vector3( 1800, 0,    0),
+            new THREE.Vector3( 1800, 0, 1400),
+            new THREE.Vector3(  500, 0, 1400),
+            new THREE.Vector3(  500, 0, 2200),
+            new THREE.Vector3(-1000, 0, 2200),
+            new THREE.Vector3(-1000, 0,  700),
+            new THREE.Vector3(-2200, 0,  700),
+            new THREE.Vector3(-2200, 0,-1200),
+            new THREE.Vector3( -800, 0,-1200),
+            new THREE.Vector3( -800, 0,-2200),
+            new THREE.Vector3( 1200, 0,-2200),
+            new THREE.Vector3( 1200, 0, -900)
+        ]
+    }
+};
+
+const CAR_CLASSES = {
+    hypercar: {
+        name: "Apex Horizon (Hypercar)",
+        type: "hypercar",
+        maxSpeed: 17.5,
+        accel: 0.35,
+        handling: 0.062,
+        nitro: 1.6,
+        description: "Ultra-low aerodynamic profile, active wings, extreme top speed."
+    },
+    jdm_drift: {
+        name: "Kaze GT (JDM Drift Spec)",
+        type: "jdm_drift",
+        maxSpeed: 15.8,
+        accel: 0.30,
+        handling: 0.082,
+        nitro: 1.9,
+        description: "Widebody stance, aggressive GT wing, maximum drift angle control."
+    },
+    muscle: {
+        name: "V8 Supercharger (Muscle)",
+        type: "muscle",
+        maxSpeed: 16.8,
+        accel: 0.42,
+        handling: 0.052,
+        nitro: 2.2,
+        description: "Raw V8 supercharged muscle, explosive launch acceleration."
+    },
+    offroad: {
+        name: "Dune Buster (Rally Buggy)",
+        type: "offroad",
+        maxSpeed: 15.2,
+        accel: 0.32,
+        handling: 0.070,
+        nitro: 1.7,
+        description: "Elevated suspension, offroad tires, roll cage chassis."
+    }
+};
+
+let currentCarClass = 'hypercar';
+let currentTrackLayout = 'grand_prix';
+let currentUnderglow = '#00f3ff';
+
 // ---- Globals ----
 let track = { cx: 0, cy: 0, rx: 1600, ry: 1000, width: 450 };
 let trackMesh = null;
 let checkpoints = [];
-let CP_COUNT = 24;
+let CP_COUNT = 64;
 let player;
 let rivals = [];
 let allCars = [];
@@ -943,141 +1046,145 @@ function buildTrack3D() {
     if (trackMesh) scene.remove(trackMesh);
     streetLights = [];
     trackMesh = new THREE.Group();
-    
-    // Create track shape
-    const shape = new THREE.Shape();
-    // Approximate ellipse with curve
-    shape.absellipse(0, 0, track.rx + track.width/2, track.ry + track.width/2, 0, Math.PI * 2, false, 0);
-    
-    const hole = new THREE.Path();
-    hole.absellipse(0, 0, track.rx - track.width/2, track.ry - track.width/2, 0, Math.PI * 2, false, 0);
-    shape.holes.push(hole);
 
-    const geo = new THREE.ShapeGeometry(shape, 64);
-    // Vibrant professional asphalt — darker slate grey
-    const mat = new THREE.MeshLambertMaterial({ color: '#0f172a' }); // very dark blue-grey so it looks rich
-    const surfaceMesh = new THREE.Mesh(geo, mat);
-    surfaceMesh.rotation.x = -Math.PI / 2;
-    surfaceMesh.position.y = 0.5;
+    const layout = TRACK_LAYOUTS[currentTrackLayout] || TRACK_LAYOUTS.grand_prix;
+    const curve = new THREE.CatmullRomCurve3(layout.controlPoints, true, 'centripetal', 0.5);
+    const N = 200;
+    const points = curve.getSpacedPoints(N);
+    const trackWidth = layout.width || 420;
+    const halfW = trackWidth / 2;
+
+    const asphaltMat = new THREE.MeshLambertMaterial({ color: '#0f172a' });
+    const tireWallMat = new THREE.MeshLambertMaterial({ color: '#111111' });
+    const innerWallMat = new THREE.MeshLambertMaterial({ color: '#0369a1' });
+    const curbMat = new THREE.MeshLambertMaterial({ map: createCurbTexture() });
+
+    // Build custom track ribbon mesh
+    const ribbonGeo = new THREE.BufferGeometry();
+    const pos = [];
+    const uvs = [];
+    const indices = [];
+
+    for (let i = 0; i <= N; i++) {
+        const pt = points[i % N];
+        const nextPt = points[(i + 1) % N];
+        const tangent = new THREE.Vector3().subVectors(nextPt, pt).normalize();
+        const normal = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize();
+
+        const leftX = pt.x + normal.x * halfW;
+        const leftZ = pt.z + normal.z * halfW;
+        const rightX = pt.x - normal.x * halfW;
+        const rightZ = pt.z - normal.z * halfW;
+
+        pos.push(leftX, 0.5, leftZ);
+        pos.push(rightX, 0.5, rightZ);
+
+        uvs.push(0, i / N * 20);
+        uvs.push(1, i / N * 20);
+
+        if (i < N) {
+            const row1 = i * 2;
+            const row2 = (i + 1) * 2;
+            indices.push(row1, row2, row1 + 1);
+            indices.push(row1 + 1, row2, row2 + 1);
+        }
+    }
+
+    ribbonGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    ribbonGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    ribbonGeo.setIndex(indices);
+    ribbonGeo.computeVertexNormals();
+
+    const surfaceMesh = new THREE.Mesh(ribbonGeo, asphaltMat);
     surfaceMesh.receiveShadow = true;
     trackMesh.add(surfaceMesh);
 
-    // Track Walls — deep racing blue and tire wall black
-    const wallExtrudeSettings = { depth: 20, bevelEnabled: false, curveSegments: 64 };
-    const tireWallMat = new THREE.MeshLambertMaterial({ color: '#111111' });
-    const innerWallMat = new THREE.MeshLambertMaterial({ color: '#0369a1' });
-    
-    // Outer Wall (Tire Wall)
-    const outerWallShape = new THREE.Shape();
-    outerWallShape.absellipse(0, 0, track.rx + track.width/2 + 20, track.ry + track.width/2 + 20, 0, Math.PI * 2, false, 0);
-    const outerWallHole = new THREE.Path();
-    outerWallHole.absellipse(0, 0, track.rx + track.width/2, track.ry + track.width/2, 0, Math.PI * 2, false, 0);
-    outerWallShape.holes.push(outerWallHole);
-    const outerWallGeo = new THREE.ExtrudeGeometry(outerWallShape, wallExtrudeSettings);
+    // Build Outer & Inner Barrier Walls & Streetlights
+    const outerWallGeo = new THREE.BufferGeometry();
+    const outerWallPos = [];
+    const outerWallIndices = [];
+
+    for (let i = 0; i <= N; i++) {
+        const pt = points[i % N];
+        const nextPt = points[(i + 1) % N];
+        const tangent = new THREE.Vector3().subVectors(nextPt, pt).normalize();
+        const normal = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize();
+
+        const outerX = pt.x + normal.x * (halfW + 15);
+        const outerZ = pt.z + normal.z * (halfW + 15);
+
+        outerWallPos.push(outerX, 0.5, outerZ);
+        outerWallPos.push(outerX, 22, outerZ);
+
+        if (i < N) {
+            const r1 = i * 2;
+            const r2 = (i + 1) * 2;
+            outerWallIndices.push(r1, r2, r1 + 1);
+            outerWallIndices.push(r1 + 1, r2, r2 + 1);
+        }
+
+        // Add streetlights every 6th node
+        if (i % 6 === 0) {
+            const poleGeo = new THREE.CylinderGeometry(2, 2, 80, 8);
+            const poleMat = new THREE.MeshLambertMaterial({ color: '#1e293b' });
+            const pole = new THREE.Mesh(poleGeo, poleMat);
+            pole.position.set(outerX + normal.x * 20, 40, outerZ + normal.z * 20);
+
+            const light = new THREE.SpotLight(0xfffaeb, 0, 1500, Math.PI / 3, 0.5, 1.2);
+            light.position.set(0, 35, 10);
+
+            const target = new THREE.Object3D();
+            target.position.set(-normal.x * 100, -60, -normal.z * 100);
+            pole.add(target);
+            light.target = target;
+            pole.add(light);
+            trackMesh.add(pole);
+            streetLights.push(light);
+        }
+    }
+
+    outerWallGeo.setAttribute('position', new THREE.Float32BufferAttribute(outerWallPos, 3));
+    outerWallGeo.setIndex(outerWallIndices);
+    outerWallGeo.computeVertexNormals();
+
     const outerWallMesh = new THREE.Mesh(outerWallGeo, tireWallMat);
-    outerWallMesh.rotation.x = -Math.PI / 2;
-    outerWallMesh.position.y = 0.5;
     outerWallMesh.castShadow = true;
     outerWallMesh.receiveShadow = true;
     trackMesh.add(outerWallMesh);
 
-    // Inner Wall
-    const innerWallShape = new THREE.Shape();
-    innerWallShape.absellipse(0, 0, track.rx - track.width/2, track.ry - track.width/2, 0, Math.PI * 2, false, 0);
-    const innerWallHole = new THREE.Path();
-    innerWallHole.absellipse(0, 0, track.rx - track.width/2 - 20, track.ry - track.width/2 - 20, 0, Math.PI * 2, false, 0);
-    innerWallShape.holes.push(innerWallHole);
-    const innerWallGeo = new THREE.ExtrudeGeometry(innerWallShape, wallExtrudeSettings);
-    const innerWallMesh = new THREE.Mesh(innerWallGeo, innerWallMat);
-    innerWallMesh.rotation.x = -Math.PI / 2;
-    innerWallMesh.position.y = 0.5;
-    innerWallMesh.castShadow = true;
-    innerWallMesh.receiveShadow = true;
-    trackMesh.add(innerWallMesh);
-
-    // Curbs (Outer)
-    const curbGeo = new THREE.TorusGeometry(track.rx + track.width/2 + 5, 5, 4, 128);
-    const curbMat = new THREE.MeshLambertMaterial({ map: createCurbTexture() }); 
-    const curbMesh = new THREE.Mesh(curbGeo, curbMat);
-    curbMesh.rotation.x = -Math.PI / 2;
-    curbMesh.scale.set(1, track.ry / track.rx, 1);
-    curbMesh.position.y = 1;
-    trackMesh.add(curbMesh);
-    
-    // Curbs (Inner)
-    const curbGeoIn = new THREE.TorusGeometry(track.rx - track.width/2 - 5, 5, 4, 128);
-    const curbMeshIn = new THREE.Mesh(curbGeoIn, curbMat);
-    curbMeshIn.rotation.x = -Math.PI / 2;
-    curbMeshIn.scale.set(1, track.ry / track.rx, 1);
-    curbMeshIn.position.y = 1;
-    trackMesh.add(curbMeshIn);
-
-    // Center line
-    const lineGeo = new THREE.TorusGeometry(track.rx, 2, 3, 128);
-    const lineMat = new THREE.MeshBasicMaterial({ map: createLineTexture(), transparent: true });
-    const lineMesh = new THREE.Mesh(lineGeo, lineMat);
-    lineMesh.rotation.x = -Math.PI / 2;
-    lineMesh.scale.set(1, track.ry / track.rx, 1);
-    lineMesh.position.y = 1;
-    trackMesh.add(lineMesh);
-
-    // Start line
-    const startGeo = new THREE.PlaneGeometry(track.width, 30);
+    // Start Line
+    const startPt = points[0];
+    const startNext = points[1];
+    const startTang = new THREE.Vector3().subVectors(startNext, startPt).normalize();
     const startMat = new THREE.MeshBasicMaterial({ map: createStartLineTexture(), transparent: true });
-    const startMesh = new THREE.Mesh(startGeo, startMat);
+    const startMesh = new THREE.Mesh(new THREE.PlaneGeometry(trackWidth, 30), startMat);
     startMesh.rotation.x = -Math.PI / 2;
-    startMesh.position.set(track.rx, 1.2, 0);
+    startMesh.rotation.z = Math.atan2(startTang.z, startTang.x);
+    startMesh.position.set(startPt.x, 1.2, startPt.z);
     trackMesh.add(startMesh);
 
     scene.add(trackMesh);
-
-    // Build street lights along the track
-    const numLights = 32;
-    for (let i = 0; i < numLights; i++) {
-        const theta = (i / numLights) * Math.PI * 2;
-        // Position them slightly outside the outer wall
-        const poleRx = track.rx + track.width/2 + 35;
-        const poleRy = track.ry + track.width/2 + 35;
-        const x = poleRx * Math.cos(theta);
-        const z = poleRy * Math.sin(theta);
-        
-        // Pole
-        const poleGeo = new THREE.CylinderGeometry(2, 2, 80, 8);
-        const poleMat = new THREE.MeshLambertMaterial({ color: '#1e293b' });
-        const pole = new THREE.Mesh(poleGeo, poleMat);
-        pole.position.set(x, 40, z);
-        
-        // Aim the pole head towards the track center
-        pole.lookAt(0, 40, 0);
-        // Tilt it slightly down
-        pole.rotation.x -= 0.15;
-        
-        // Spotlight aiming down at the track
-        const light = new THREE.SpotLight(0xfffaeb, 0, 1500, Math.PI / 3, 0.5, 1.2);
-        light.position.set(0, 35, 10);
-        
-        const target = new THREE.Object3D();
-        target.position.set(0, -60, 100); 
-        pole.add(target);
-        light.target = target;
-        
-        pole.add(light);
-        trackMesh.add(pole);
-        streetLights.push(light);
-    }
-
     addAudience();
 }
 
 function surfaceGrip(x, z) {
-    const d = Math.pow(x / track.rx, 2) + Math.pow(z / track.ry, 2);
+    if (!checkpoints || checkpoints.length === 0) return 1.0;
+    let minDist = Infinity;
+    for (let i = 0; i < checkpoints.length; i++) {
+        const cp = checkpoints[i];
+        const dx = x - cp.x;
+        const dz = z - cp.y;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        if (dist < minDist) minDist = dist;
+    }
+    const layout = TRACK_LAYOUTS[currentTrackLayout] || TRACK_LAYOUTS.grand_prix;
+    const halfWidth = (layout.width || 420) / 2;
     let grip = 1.0;
-    // Gameplay: Advanced Physics & Terrain Grip - Stronger penalty for off-track
-    if (d > 1.02 || d < 0.6) grip = 0.15; // Severe loss of grip on grass
-    
+    if (minDist > halfWidth + 15) grip = 0.15; // Off-track grass penalty
+
     if (currentWeather === 'rain') grip *= 0.75;
     else if (currentWeather === 'snow') grip *= 0.6;
-    
+
     return grip;
 }
 
@@ -2820,24 +2927,37 @@ function returnToMenu() {
 function setupStartingGrid() {
     finishedCount = 0;
     checkpoints = [];
+    const layout = TRACK_LAYOUTS[currentTrackLayout] || TRACK_LAYOUTS.grand_prix;
+    const curve = new THREE.CatmullRomCurve3(layout.controlPoints, true, 'centripetal', 0.5);
+    const pts = curve.getSpacedPoints(CP_COUNT);
     for (let i = 0; i < CP_COUNT; i++) {
-        const a = (i / CP_COUNT) * Math.PI * 2;
-        checkpoints.push({ x: Math.cos(a) * track.rx, y: Math.sin(a) * track.ry, a });
+        const pt = pts[i];
+        const nextPt = pts[(i + 1) % CP_COUNT];
+        const angle = Math.atan2(nextPt.z - pt.z, nextPt.x - pt.x);
+        checkpoints.push({ x: pt.x, y: pt.z, a: angle });
     }
     buildTrack3D();
 
     if (player && player.destroy) player.destroy();
     if (allCars.length > 0) allCars.forEach(c => c.destroy());
 
-    player = new Car(checkpoints[0].x - 40, checkpoints[0].y - 60, Math.PI / 2, customColor, true);
+    const carStats = CAR_CLASSES[currentCarClass] || CAR_CLASSES.hypercar;
+    const startCp = checkpoints[0];
+    const perpA = startCp.a + Math.PI / 2;
+
+    player = new Car(startCp.x - Math.cos(perpA) * 40, startCp.y - Math.sin(perpA) * 40, startCp.a, customColor, true);
+    player.maxSpeed = carStats.maxSpeed;
+    player.accel = carStats.accel;
+    player.turnSpeed = carStats.handling;
+
     rivals = [
-        new Car(checkpoints[0].x + 40, checkpoints[0].y - 60, Math.PI / 2, '#ff003c', false),
-        new Car(checkpoints[0].x - 40, checkpoints[0].y - 150, Math.PI / 2, '#ffea00', false),
-        new Car(checkpoints[0].x + 40, checkpoints[0].y - 150, Math.PI / 2, '#9d00ff', false),
+        new Car(startCp.x + Math.cos(perpA) * 40, startCp.y + Math.sin(perpA) * 40, startCp.a, '#ff003c', false),
+        new Car(startCp.x - Math.cos(perpA) * 40 - Math.cos(startCp.a) * 80, startCp.y - Math.sin(perpA) * 40 - Math.sin(startCp.a) * 80, startCp.a, '#ffea00', false),
+        new Car(startCp.x + Math.cos(perpA) * 40 - Math.cos(startCp.a) * 80, startCp.y + Math.sin(perpA) * 40 - Math.sin(startCp.a) * 80, startCp.a, '#9d00ff', false),
     ];
     allCars = [player, ...rivals];
     applyDifficultyToRivals();
-    
+
     allCars.forEach(c => {
         c.mesh.position.set(c.x, 4.5, c.y);
         c.mesh.rotation.y = -c.angle - Math.PI / 2;
@@ -2855,7 +2975,6 @@ function applyDifficultyToRivals() {
     rivals.forEach(r => {
         r.maxSpeed *= m;
         r.accel *= m;
-        // On hard, make AI more aggressive
         if (currentDifficulty === 'hard') {
             r.turnSpeed = (r.turnSpeed || 0.055) * 1.1;
         } else if (currentDifficulty === 'easy') {
@@ -2864,8 +2983,26 @@ function applyDifficultyToRivals() {
     });
 }
 
+function selectCarClass(val) {
+    currentCarClass = val;
+    const stats = CAR_CLASSES[val];
+    if (stats && player) {
+        player.maxSpeed = stats.maxSpeed;
+        player.accel = stats.accel;
+        player.turnSpeed = stats.handling;
+    }
+    updatePlayerColor(customColor);
+}
 
+function selectTrackLayout(val) {
+    currentTrackLayout = val;
+    setupStartingGrid();
+}
 
+function selectUnderglow(val) {
+    currentUnderglow = val;
+    updatePlayerColor(customColor);
+}
 
 let menuAngle = 0;
 let menuTimer = 0;
@@ -2883,7 +3020,6 @@ function menuLoop() {
     
     menuTimer += 0.016; 
     
-    // One continuous cinematic orbit around the player on the starting grid
     const angle = menuTimer * 0.2; 
     const dist = 65 + Math.sin(menuTimer * 0.5) * 15;
     
@@ -2892,7 +3028,6 @@ function menuLoop() {
     const camZ = player.y + Math.cos(angle) * dist;
     
     camera.position.set(camX, camY, camZ);
-    // Offset lookAt to frame the car nicely against the track and keep UI clear
     camera.lookAt(player.x - 15, 4.5, player.y);
     
     updateWeather();
@@ -2901,7 +3036,6 @@ function menuLoop() {
     if (!raceStarted) {
         animationFrameId = requestAnimationFrame(menuLoop);
     }
-
 }
 
 function updatePlayerColor(colorHex) {
@@ -2918,13 +3052,12 @@ function updatePlayerColor(colorHex) {
 
 function toggleWeather(type) {
     currentWeather = type;
-    buildTrack3D(); // Rebuild track to update grass texture based on weather
+    buildTrack3D(); 
     if (groundMesh) {
         groundMesh.material.map = createGrassTexture();
         groundMesh.material.needsUpdate = true;
     }
     if (scene) {
-        // Update skybox dynamically
         const skyMat = new THREE.MeshBasicMaterial({ map: createSkyTexture(), side: THREE.BackSide, fog: false });
         scene.children.forEach(c => {
             if (c.geometry && c.geometry.type === 'CylinderGeometry' && c.position.y === 200) {
@@ -2945,6 +3078,9 @@ window.togglePause = togglePause;
 window.updatePlayerColor = updatePlayerColor;
 window.toggleWeather = toggleWeather;
 window.setDifficulty = setDifficulty;
+window.selectCarClass = selectCarClass;
+window.selectTrackLayout = selectTrackLayout;
+window.selectUnderglow = selectUnderglow;
 window.toggleFS = toggleFS;
 window.toggleCamera = toggleCamera;
 window.openSettings = openSettings;

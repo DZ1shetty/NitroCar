@@ -1759,6 +1759,31 @@
             "
           >
             <div class="setting-group">
+              <label class="dash-label">VEHICLE CLASS</label>
+              <select
+                id="carClassSelect"
+                onchange="selectCarClass(this.value)"
+                class="custom-select"
+              >
+                <option value="hypercar">🏎️ APEX HORIZON (HYPERCAR)</option>
+                <option value="jdm_drift">⚡ KAZE GT (JDM DRIFT)</option>
+                <option value="muscle">🚀 V8 SUPERCHARGER (MUSCLE)</option>
+                <option value="offroad">🏜️ DUNE BUSTER (RALLY BUGGY)</option>
+              </select>
+            </div>
+            <div class="setting-group">
+              <label class="dash-label">TRACK LAYOUT</label>
+              <select
+                id="trackSelect"
+                onchange="selectTrackLayout(this.value)"
+                class="custom-select"
+              >
+                <option value="grand_prix">🏁 GRAND PRIX SERPENT</option>
+                <option value="canyon_run">⛰️ CANYON SWITCHBACKS</option>
+                <option value="tokyo_drift">🏙️ TOKYO EXPRESSWAY RING</option>
+              </select>
+            </div>
+            <div class="setting-group">
               <label class="dash-label">CAR COLOR</label>
               <input
                 type="color"
@@ -1767,6 +1792,20 @@
                 class="color-picker-input"
                 onchange="updatePlayerColor(this.value)"
               />
+            </div>
+            <div class="setting-group">
+              <label class="dash-label">NEON UNDERGLOW</label>
+              <select
+                id="underglowSelect"
+                onchange="selectUnderglow(this.value)"
+                class="custom-select"
+              >
+                <option value="#00f3ff">⚡ CYAN NEON</option>
+                <option value="#ff0055">🔥 MAGENTA NEON</option>
+                <option value="#ffe600">🌟 GOLDEN GLOW</option>
+                <option value="#00ff66">🧪 LIME NEON</option>
+                <option value="none">OFF</option>
+              </select>
             </div>
             <div class="setting-group">
               <label class="dash-label">WEATHER</label>
