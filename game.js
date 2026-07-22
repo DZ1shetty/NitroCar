@@ -2937,3 +2937,24 @@ function toggleWeather(type) {
 // Start in the menu
 init3D();
 initMenu();
+
+// Expose functions globally on window for inline HTML event handlers (ES Module compatibility)
+window.startGame = startGame;
+window.returnToMenu = returnToMenu;
+window.togglePause = togglePause;
+window.updatePlayerColor = updatePlayerColor;
+window.toggleWeather = toggleWeather;
+window.setDifficulty = setDifficulty;
+window.toggleFS = toggleFS;
+window.toggleCamera = toggleCamera;
+window.openSettings = openSettings;
+window.closeSettings = closeSettings;
+window.setMusicVolume = setMusicVolume;
+window.setSfxVolume = setSfxVolume;
+window.setDefaultCamera = setDefaultCamera;
+window.setShakeIntensity = setShakeIntensity;
+window.updateBestTimeOnMenu = updateBestTimeOnMenu;
+window.shareLapTime = shareLapTime;
+window.checkPersonalBest = checkPersonalBest;
+window.formatTime = formatTime;
+
